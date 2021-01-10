@@ -1,14 +1,14 @@
 
-### Enter root shell
+#### Enter root shell
 
     sudo su
 
-### Clone this repo
+#### Clone this repo
     cd ~
     git clone https://github.com/Tualua/pk-api-linux.git
 
-### Ubuntu 
-### Install OpenZFS 2.0.1
+#### Ubuntu 
+##### Install OpenZFS 2.0.1
 
     apt -y  install build-essential autoconf automake libtool gawk alien fakeroot dkms libblkid-dev uuid-dev libudev-dev libssl-dev zlib1g-dev libaio-dev libattr1-dev libelf-dev linux-headers-$(uname -r) python3 python3-dev python3-setuptools python3-cffi libffi-dev
     cd ~
@@ -25,7 +25,7 @@
     zpool import data
     zpool set cachefile=/etc/zfs/zpool.cache data
 
-### Install additional software
+##### Install additional software
 
     apt -y install expat
     apt -y install libxml-parser-perl libdevel-stacktrace-perl libdata-uuid-perl
@@ -34,34 +34,34 @@
     apt -y install targetcli-fb
     apt -y install mbuffer
 
-### Create user to run API
+##### Create user to run API
 
     useradd zfsreplica
     usermod zfsreplica -aG www-data 
     usermod zfsreplica -aG sudo
 
-### Create log directory
+##### Create log directory
 
     mkdir -p /var/log/zfsreplica
     chown zfsreplica:www-data /var/log/zfsreplica
 
-### Create spool directory
+##### Create spool directory
 
     mkdir -p /var/spool/zfsapi
     chown zfsreplica:www-data /var/spool/zfsapi
 
-### FreeBSD sudo is in /usr/local/bin and we need to make a link
+##### FreeBSD sudo is in /usr/local/bin and we need to make a link
 
     ln -s /usr/bin/sudo /usr/local/bin/sudo
     
-### ctladm
+##### ctladm
 
     cp ~/pk-api-linux/ctladm /usr/bin/
     chmod +x /usr/bin/ctladm
     mkdir /etc/ctladm
     cp ~/pk-api-linux/ctladm.ini /etc/ctladm
     
-### NGINX
+##### NGINX
 
     cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
     cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
@@ -70,14 +70,14 @@
     mkdir /var/www/api
     rm /etc/nginx/sites-enabled/default
 
-### Copy API to /var/www/api
+##### Copy API to /var/www/api
     
-#### Check nginx config syntax    
+###### Check nginx config syntax    
     
     nginx -t
     systemctl reload nginx
         
-### uWSGI
+##### uWSGI
     mkdir /usr/local/etc/uwsgi
     cp ~/pk-api-linux/uwsgi/*.ini /usr/local/etc/uwsgi/
     cp ~/pk-api-linux/uwsgi/uwsgi-app\@.service /etc/systemd/system/
