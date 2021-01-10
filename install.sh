@@ -17,8 +17,9 @@ apt -y install nginx
 apt -y install uwsgi uwsgi-plugin-psgi
 apt -y install targetcli-fb
 
-
-
+useradd zfsreplica
+usermod zfsreplica -aG www-data 
+usermod zfsreplica -aG sudo
 
 # Create log directory
 mkdir -p /var/log/zfsreplica
