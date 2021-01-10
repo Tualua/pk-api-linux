@@ -14,3 +14,7 @@ Installation manual is in INSTALL.md
 No pool auto import
 https://github.com/openzfs/zfs/issues/11450
     
+# TODO
+
+Test Oracle Linux 8.3
+Scripts to create initial clones, luns and initiators
