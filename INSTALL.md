@@ -110,3 +110,49 @@ Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
 ##### Check API
 
     curl -sS "http://localhost/api/?action=status"
+
+#### Create LUNs and initiators
+
+You should limit LUNs visibility to hosts by using initiator names in acl. Also do not forget to edit `/etc/ctladm.ini` and add vm and initiator names
+
+Create backstore for system disk
+
+    targetcli backstores/block create name=1001 dev=/dev/zvol/data/kvm/desktop/desktop-vm1
+    
+Create initiator
+
+    targetcli iscsi/ create wwn=iqn.2016-04.net.playkey.iscsi:desktop-vm1
+    
+Delete default portal
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/portals/ delete ip_address=0.0.0.0 ip_port=3260
+    
+Add portal
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/portals/ create ip_address=192.168.255.1
+    
+Disable authentication
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/ set attribute authentication=0
+    
+Limit LUN access only to initiator with WWN iqn.2020-09.net.playkey.iscsi:hv:pk-host1 (for example)
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/acls create wwn=iqn.2020-09.net.playkey.iscsi:hv:pk-host1
+
+Add LUN to initiator
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/luns create lun=0 storage_object=/backstores/block/1001
+
+All the same for games disk
+
+    targetcli backstores/block create name=2001 dev=/dev/zvol/data/kvm/desktop/games-vm1
+    targetcli iscsi/ create wwn=iqn.2016-04.net.playkey.iscsi:games-vm1
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/portals/ delete ip_address=0.0.0.0 ip_port=3260
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/portals/ create ip_address=192.168.255.1
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/ set attribute authentication=0
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/acls create wwn=iqn.2020-09.net.playkey.iscsi:hv:pk-host1
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/luns create lun=0 storage_object=/backstores/block/2001
+    
+Save targetcli config
+
+    targetcli saveconfig
