@@ -106,3 +106,7 @@ Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
     spawned uWSGI worker 2 (pid: 6017, cores: 1)
     spawned uWSGI worker 3 (pid: 6018, cores: 1)
     *** Stats server enabled on 127.0.0.1:1717 fd: 14 ***
+
+##### Check API
+
+    curl -sS "http://localhost/api/?action=status"
