@@ -135,7 +135,7 @@ Disable authentication
 
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/ set attribute authentication=0
     
-Limit LUN access only to initiator with WWN iqn.2020-09.net.playkey.iscsi:hv:pk-host1 (for example)
+Limit LUN access only to initiator with WWN `iqn.2020-09.net.playkey.iscsi:hv:pk-host1` (for example)
 
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/acls create wwn=iqn.2020-09.net.playkey.iscsi:hv:pk-host1
 
