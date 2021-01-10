@@ -6,3 +6,11 @@ I did't chane Perl API, just wrote ctladm to targetcli commands translator and c
 I didn't find ctld's Port Number in LIO so I used backstores names (only numeric names)
 
 Tested on Ubuntu 20.04.1
+
+Installation manual is in INSTALL.md
+
+# Known bugs
+
+No pool auto import
+https://github.com/openzfs/zfs/issues/11450
+    
