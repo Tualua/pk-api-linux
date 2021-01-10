@@ -1,0 +1,100 @@
+#!/usr/bin/python3
+
+import argparse
+from rtslib_fb import (Target, TPG, NodeACL, FabricModule, BlockStorageObject,
+                       RTSRoot, NetworkPortal, LUN, MappedLUN, RTSLibError,
+                       RTSLibNotInCFS, NodeACLGroup)
+import rtslib_fb
+
+
+def get_devlist(rtsroot):
+    devlist = []
+    tpgs = list(rtsroot.tpgs)
+    for tpg in tpgs:
+        for lun in tpg.luns:
+            devlist.append(list(map(lambda x: str(x), [
+                lun.storage_object.name,
+                lun.storage_object.plugin,
+                int(lun.storage_object.size/512),
+                512,
+                lun.storage_object.wwn,
+                tpg.parent_target.wwn[tpg.parent_target.wwn.rfind(':')+1:]
+            ])))
+    return devlist
+
+
+def get_portlist(rtsroot):
+    portlist = []
+    for lun in rtsroot.luns:
+        portlist.append([
+            lun.storage_object.name,
+            'YES' if lun.storage_object.status == 'activated' else 'NO',
+            lun.parent_tpg.parent_target.fabric_module.name,
+            lun.parent_tpg.parent_target.fabric_module.name,
+            ','.join([lun.parent_tpg.parent_target.wwn, 't', '0x0101'])
+        ])
+    return portlist
+
+
+def get_portlist_qvp(rtsroot, port):
+    portlist = {}
+    for lun in rtsroot.luns:
+        portlist[lun.storage_object.name] = {
+            'Target': lun.parent_tpg.parent_target.wwn,
+            'LUN 0': lun.storage_object.name
+        }
+
+    print('Target={}'.format(portlist[str(port)]['Target']))
+    print('LUN 0: {}'.format(portlist[str(port)]['LUN 0']))
+
+
+def get_islist(rtsroot):
+    sessions = list(rtsroot.sessions)
+    islist = []
+    for session in sessions:
+        portal = list(session['parent_nodeacl'].parent_tpg.network_portals)[0].ip_address
+        islist.append(list(map(lambda x: str(x), [session['id'], portal,
+                      session['parent_nodeacl'].node_wwn,
+                      session['parent_nodeacl'].parent_tpg.parent_target.wwn]))
+                      )
+    return islist
+
+
+def create_lun(options, deviceid, lun):
+    opt_file = options[0].split('=')[1]
+    # opt_vendor = options[1].split('=')[1]
+    opt_iqn = options[2].split('=')[1]
+    print(' File: {} deviceid: {} iqn: {} lun {}'.format(opt_file, deviceid, opt_iqn, lun))
+
+
+def print_result(result):
+    for res in result:
+        print('\t'.join(res))
+
+
+def main(args):
+    root = rtslib_fb.RTSRoot()
+    if args.command == 'devlist':
+        print_result(get_devlist(root))
+    if args.command == 'islist':
+        print_result(get_islist(root))
+    if args.command == 'portlist' and not args.qvp:
+        print_result(get_portlist(root))
+    if args.command == 'portlist' and args.qvp:
+        get_portlist_qvp(root, args.qvp)
+    if args.command == 'create':
+        create_lun(args.o, args.d, args.l)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Linux ctladm wrapper')
+    parser.add_argument('command', type=str, action='store', help='ctladm command')
+    parser.add_argument('-q', action='store_true', help='ctladm command')
+    parser.add_argument('-qvp', type=int, action='store', help='Omit header, verbose, specify port number', required=False)
+    parser.add_argument('-b', type=str, action='store', help='Device type')
+    parser.add_argument('-o', type=str, action='append', help='Create options')
+    parser.add_argument('-d', type=str, action='store', help='Device ID')
+    parser.add_argument('-l', type=str, action='store', help='LUN')
+
+    args = parser.parse_args()
+    main(args)
