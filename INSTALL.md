@@ -50,10 +50,15 @@
     mkdir -p /var/spool/zfsapi
     chown zfsreplica:www-data /var/spool/zfsapi
 
-##### FreeBSD sudo is in /usr/local/bin and we need to make a link
+##### FreeBSD sudo and perl is in /usr/local/bin and we need to make a link
 
     ln -s /usr/bin/sudo /usr/local/bin/sudo
+    ln -s /usr/bin/perl /usr/local/bin/perl
     
+##### visudo
+
+Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
+
 ##### ctladm
 
     cp ~/pk-api-linux/ctladm /usr/bin/
@@ -83,4 +88,21 @@
     cp ~/pk-api-linux/uwsgi/uwsgi-app\@.service /etc/systemd/system/
     systemctl enable uwsgi-app@uwsgi_replicate.service --now
     systemctl enable uwsgi-app@uwsgi_api.service --now
-   
+
+###### Check uWSGI logs
+
+    # tail -n50 /var/log/uwsgi/uwsgi_api.log
+
+    initialized Perl 5.30.0 main interpreter at 0x55f1262f9820
+    your server socket listen backlog is limited to 32 connections
+    your mercy for graceful operations on workers is 60 seconds
+    mapped 291680 bytes (284 KB) for 3 cores
+    *** Operational MODE: preforking ***
+    Plack::Util is not installed, using "do" instead of "load_psgi"
+    PSGI app 0 (/var/www/api/api.psgi) loaded in 0 seconds at 0x55f12653f978 (interpreter 0x55f1262f9820)
+    *** uWSGI is running in multiple interpreter mode ***
+    spawned uWSGI master process (pid: 5999)
+    spawned uWSGI worker 1 (pid: 6016, cores: 1)
+    spawned uWSGI worker 2 (pid: 6017, cores: 1)
+    spawned uWSGI worker 3 (pid: 6018, cores: 1)
+    *** Stats server enabled on 127.0.0.1:1717 fd: 14 ***
