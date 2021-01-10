@@ -28,10 +28,11 @@
 ### Install additional software
 
     apt -y install expat
-    apt -y install libxml-parser-perl libdevel-stacktrace-perl
+    apt -y install libxml-parser-perl libdevel-stacktrace-perl libdata-uuid-perl
     apt -y install nginx
     apt -y install uwsgi uwsgi-plugin-psgi
     apt -y install targetcli-fb
+    apt -y install mbuffer
 
 ### Create user to run API
 
@@ -52,3 +53,34 @@
 ### FreeBSD sudo is in /usr/local/bin and we need to make a link
 
     ln -s /usr/bin/sudo /usr/local/bin/sudo
+    
+### ctladm
+
+    cp ~/pk-api-linux/ctladm /usr/bin/
+    chmod +x /usr/bin/ctladm
+    mkdir /etc/ctladm
+    cp ~/pk-api-linux/ctladm.ini /etc/ctladm
+    
+### NGINX
+
+    cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
+    cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
+    cp ~/pk-api-linux/nginx/api.conf /etc/nginx/conf.d/
+    mkdir -p /var/tmp/nginx/cache/default
+    mkdir /var/www/api
+    rm /etc/nginx/sites-enabled/default
+
+### Copy API to /var/www/api
+    
+#### Check nginx config syntax    
+    
+    nginx -t
+    systemctl reload nginx
+        
+### uWSGI
+    mkdir /usr/local/etc/uwsgi
+    cp ~/pk-api-linux/uwsgi/*.ini /usr/local/etc/uwsgi/
+    cp ~/pk-api-linux/uwsgi/uwsgi-app\@.service /etc/systemd/system/
+    systemctl enable uwsgi-app@uwsgi_replicate.service --now
+    systemctl enable uwsgi-app@uwsgi_api.service --now
+   
