@@ -11,7 +11,7 @@ Installation manual is in INSTALL.md
 
 # Known bugs
 
-No pool auto import
+- No pool auto import
 https://github.com/openzfs/zfs/issues/11450
     
 # TODO
