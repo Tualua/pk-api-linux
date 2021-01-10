@@ -16,6 +16,7 @@ NotifyAccess=all
 KillSignal=SIGQUIT
 RuntimeDirectory=%i
 RuntimeDirectoryMode=775
+LogsDirectory=uwsgi
 
 [Install]
 WantedBy=multi-user.target
