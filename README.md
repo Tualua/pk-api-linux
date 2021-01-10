@@ -7,7 +7,7 @@ I didn't find ctld's Port Number in LIO so I used backstores names (only numeric
 
 Tested on Ubuntu 20.04.1
 
-Installation manual is in [a relative link](INSTALL.md)
+Installation manual is in [INSTALL](INSTALL.md)
 
 # Known bugs
 
