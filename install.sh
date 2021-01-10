@@ -1,4 +1,14 @@
-#create log directory
+# Ubuntu
+apt install build-essential
+apt install expat
+apt install libxml-parser-perl
+apt install libdevel-stacktrace-perl
+apt install nginx
+apt install uwsgi
+apt install uwsgi-plugin-psgi
+apt install targetcli-fb
+
+# Create log directory
 mkdir -p /var/log/zfsreplica
 chown zfsreplica:www-data /var/log/zfsreplica
 
