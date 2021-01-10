@@ -1,6 +1,9 @@
+sudo su
+cd ~
+git clone https://github.com/Tualua/pk-api-linux.git
+
 # Ubuntu 
 # Install OpenZFS 2.0.1
-sudo su
 apt -y install build-essential autoconf automake libtool gawk alien fakeroot dkms libblkid-dev uuid-dev libudev-dev libssl-dev zlib1g-dev libaio-dev libattr1-dev libelf-dev linux-headers-$(uname -r) python3 python3-dev python3-setuptools python3-cffi libffi-dev
 cd ~
 wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.1/zfs-2.0.1.tar.gz
