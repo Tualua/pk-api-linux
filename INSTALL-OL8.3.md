@@ -40,8 +40,21 @@
     dnf -y module enable nginx:1.18
     dnf -y install nginx
     cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-    cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
-    cp ~/pk-api-linux/nginx/api.conf /etc/nginx/conf.d/
+    cp ~/pk-api-linux/ol8.3/nginx/nginx.conf /etc/nginx/
+    cp ~/pk-api-linux/ol8.3/nginx/api.conf /etc/nginx/conf.d/
+    mkdir -p /var/cache/httpd/default
+    mkdir -p /var/cache/httpd/mobile
+    mkdir -p /var/cache/httpd/temp
+    mkdir -p /var/www/api
+    semodule -i ~/pk-api-linux/ol8.3/selinux/nginx_custom.pp
+
+###### Check nginx config syntax
+
+    nginx -t
+
+###### Enable and start nginx
+
+    systemctl enable nginx --now
 
 ##### Create user to run API
 
@@ -59,6 +72,12 @@
     mkdir -p /var/spool/zfsapi
     chown zfsreplica:nginx /var/spool/zfsapi
 
+##### FreeBSD sudo and perl is in /usr/local/bin and we need to make a link
+
+    ln -s /usr/bin/sudo /usr/local/bin/sudo
+    ln -s /usr/bin/perl /usr/local/bin/perl
+
+##### Copy API to /var/www/api
 
 #### uWSGI
 
@@ -68,17 +87,35 @@
     cd uwsgi-2.0.19.1/
     CFLAGS="-fno-PIE -fPIC -no-pie --static" LDFLAGS="-fno-PIE -fPIC -no-pie" python3 uwsgiconfig.py --build psgi
     cp uwsgi /usr/bin/
+    cpan install Data::UUID
+    cpan install Devel::StackTrace
+    mkdir /usr/local/etc/uwsgi
+    cp ~/pk-api-linux/ol8.3/uwsgi/*.ini /usr/local/etc/uwsgi/
+    cp ~/pk-api-linux/ol8.3/uwsgi/uwsgi-app\@.service /etc/systemd/system/
+    systemctl enable uwsgi-app@uwsgi_replicate.service --now
+    systemctl enable uwsgi-app@uwsgi_api.service --now
 
+###### Check uWSGI logs
+
+    # tail -n50 /var/log/uwsgi/uwsgi_api.log
+
+    initialized Perl 5.26.3 main interpreter at 0x562882521e60
+    your server socket listen backlog is limited to 32 connections
+    your mercy for graceful operations on workers is 60 seconds
+    mapped 291680 bytes (284 KB) for 3 cores
+    *** Operational MODE: preforking ***
+    Plack::Util is not installed, using "do" instead of "load_psgi"
+    PSGI app 0 (/var/www/api/api.psgi) loaded in 0 seconds at 0x5628827c0a50 (interpreter 0x562882521e60)
+    *** uWSGI is running in multiple interpreter mode ***
+    spawned uWSGI master process (pid: 277660)
+    spawned uWSGI worker 1 (pid: 277662, cores: 1)
+    spawned uWSGI worker 2 (pid: 277663, cores: 1)
+    spawned uWSGI worker 3 (pid: 277664, cores: 1)
+    *** Stats server enabled on 127.0.0.1:1717 fd: 16 ***
 
 ##### iSCSI
 
     dnf -y install targetcli
-
-##### FreeBSD sudo and perl is in /usr/local/bin and we need to make a link
-
-    ln -s /usr/bin/sudo /usr/local/bin/sudo
-    ln -s /usr/bin/perl /usr/local/bin/perl
-    
 
 ##### ctladm
 
@@ -87,47 +124,6 @@
     mkdir /etc/ctladm
     cp ~/pk-api-linux/ctladm.ini /etc/ctladm
     
-##### NGINX
-
-    cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-    cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
-    cp ~/pk-api-linux/nginx/api.conf /etc/nginx/conf.d/
-    mkdir -p /var/tmp/nginx/cache/default
-    mkdir /var/www/api
-    rm /etc/nginx/sites-enabled/default
-
-##### Copy API to /var/www/api
-    
-###### Check nginx config syntax    
-    
-    nginx -t
-    systemctl reload nginx
-        
-##### uWSGI
-    mkdir /usr/local/etc/uwsgi
-    cp ~/pk-api-linux/uwsgi/*.ini /usr/local/etc/uwsgi/
-    cp ~/pk-api-linux/uwsgi/uwsgi-app\@.service /etc/systemd/system/
-    systemctl enable uwsgi-app@uwsgi_replicate.service --now
-    systemctl enable uwsgi-app@uwsgi_api.service --now
-
-###### Check uWSGI logs
-
-    # tail -n50 /var/log/uwsgi/uwsgi_api.log
-
-    initialized Perl 5.30.0 main interpreter at 0x55f1262f9820
-    your server socket listen backlog is limited to 32 connections
-    your mercy for graceful operations on workers is 60 seconds
-    mapped 291680 bytes (284 KB) for 3 cores
-    *** Operational MODE: preforking ***
-    Plack::Util is not installed, using "do" instead of "load_psgi"
-    PSGI app 0 (/var/www/api/api.psgi) loaded in 0 seconds at 0x55f12653f978 (interpreter 0x55f1262f9820)
-    *** uWSGI is running in multiple interpreter mode ***
-    spawned uWSGI master process (pid: 5999)
-    spawned uWSGI worker 1 (pid: 6016, cores: 1)
-    spawned uWSGI worker 2 (pid: 6017, cores: 1)
-    spawned uWSGI worker 3 (pid: 6018, cores: 1)
-    *** Stats server enabled on 127.0.0.1:1717 fd: 14 ***
-
 ##### Check API
 
     curl -sS "http://localhost/api/?action=status"

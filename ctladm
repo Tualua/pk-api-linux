@@ -160,8 +160,9 @@ def get_islist(rtsroot):
 
 def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     opt_file = options[0].split('=')[1]
-    # opt_vendor = options[1].split('=')[1]
     opt_iqn = options[2].split('=')[1].split(',')[0]
+    opt_serial = "scsi-1FREE_TT_{}".format(deviceid)
+    debug_log("Command: create lun ", "LUN Serial: {}".format(opt_serial), "Device ID: {}".format(deviceid))
     print(' File: {} deviceid: {} iqn: {} lun {}'.format(opt_file, deviceid,
           opt_iqn, lun))
     fm = FabricModule('iscsi')
@@ -171,11 +172,12 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     tpg.set_attribute("authentication", '0')
     NetworkPortal(tpg, ip_address=portal_address)
     na = NodeACL(tpg, acl)
-    so = BlockStorageObject(lun, opt_file)
+    so = BlockStorageObject(lun, opt_file, wwn=opt_serial)
+    so_dump = so.dump()
     tpg_lun = LUN(tpg, storage_object=so)
     MappedLUN(na, 0, tpg_lun)
     rtsroot.save_to_file()
-    debug_log("create lun", portal_address, options, deviceid, lun, acl)
+    debug_log("Command: create lun\n", portal_address, options, deviceid, lun, acl, so_dump)
 
 
 def remove_lun(rtsroot, lun):
