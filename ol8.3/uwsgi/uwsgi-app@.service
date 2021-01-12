@@ -1,0 +1,22 @@
+[Unit]
+Description=uWSGI service unit
+After=syslog.target
+
+[Service]
+User=zfsreplica
+Group=nginx
+PermissionsStartOnly=True
+ExecStart=/usr/bin/uwsgi --ini /usr/local/etc/uwsgi/%i.ini
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -INT $MAINPID
+Type=notify
+SuccessExitStatus=15 17 29 30
+StandardError=syslog
+NotifyAccess=all
+KillSignal=SIGQUIT
+RuntimeDirectory=%i
+RuntimeDirectoryMode=775
+LogsDirectory=uwsgi
+
+[Install]
+WantedBy=multi-user.target

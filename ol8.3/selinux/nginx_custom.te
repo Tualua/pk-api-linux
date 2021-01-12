@@ -1,0 +1,16 @@
+
+module nginx_custom 1.0;
+
+require {
+	type httpd_tmp_t;
+	type httpd_t;
+	type var_t;
+	type init_t;
+	class dir { rmdir setattr };
+}
+
+#============= httpd_t ==============
+allow httpd_t var_t:dir setattr;
+
+#============= init_t ==============
+allow init_t httpd_tmp_t:dir rmdir;
