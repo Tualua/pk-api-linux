@@ -3,22 +3,29 @@
 
     sudo su
 
+#### Install git
+
+    dnf -y install git
+
 #### Clone this repo
     cd ~
     git clone https://github.com/Tualua/pk-api-linux.git
 
-#### Ubuntu 
+#### Oracle Linux 8.3
+
+
 ##### Install OpenZFS 2.0.1
 
-    apt -y  install build-essential autoconf automake libtool gawk alien fakeroot dkms libblkid-dev uuid-dev libudev-dev libssl-dev zlib1g-dev libaio-dev libattr1-dev libelf-dev linux-headers-$(uname -r) python3 python3-dev python3-setuptools python3-cffi libffi-dev
+    dnf -y install oracle-epel-release-el8 -y
+    dnf -y install gcc make autoconf automake libtool rpm-build dkms libtirpc-devel libblkid-devel libuuid-devel libudev-devel openssl-devel zlib-devel libaio-devel libattr-devel elfutils-libelf-devel kernel-uek-devel-$(uname -r) python3 python3-devel python3-setuptools python3-cffi libffi-devel
     cd ~
     wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.1/zfs-2.0.1.tar.gz
     tar xf zfs-2.0.1.tar.gz
     cd zfs-2.0.1
     sh autogen.sh
     ./configure
-    make -s -j$(nproc) deb-dkms deb
-    dpkg -i zfs-dkms_2.0.1-1_amd64.deb zfs_2.0.1-1_amd64.deb libzfs4_2.0.1-1_amd64.deb libnvpair3_2.0.1-1_amd64.deb libuutil3_2.0.1-1_amd64.deb
+    make -s -j$(nproc) rpm-dkms rpm
+    dnf -y localinstall zfs-dkms-2.0.1-1.el8.noarch.rpm libnvpair3-2.0.1-1.el8.x86_64.rpm libuutil3-2.0.1-1.el8.x86_64.rpm libzfs4-2.0.1-1.el8.x86_64.rpm libzpool4-2.0.1-1.el8.x86_64.rpm python3-pyzfs-2.0.1-1.el8.noarch.rpm zfs-2.0.1-1.el8.x86_64.rpm
     systemctl enable zfs-import-cache
     systemctl enable zfs-import.target
     modprobe zfs
@@ -27,28 +34,23 @@
 
 ##### Install additional software
 
-    apt -y install expat
-    apt -y install libxml-parser-perl libdevel-stacktrace-perl libdata-uuid-perl
-    apt -y install nginx
-    apt -y install uwsgi uwsgi-plugin-psgi
-    apt -y install targetcli-fb
-    apt -y install mbuffer
+    
 
 ##### Create user to run API
 
     useradd zfsreplica
-    usermod zfsreplica -aG www-data 
-    usermod zfsreplica -aG sudo
+    usermod zfsreplica -aG nginx 
+    usermod zfsreplica -aG wheel
 
 ##### Create log directory
 
     mkdir -p /var/log/zfsreplica
-    chown zfsreplica:www-data /var/log/zfsreplica
+    chown zfsreplica:nginx /var/log/zfsreplica
 
 ##### Create spool directory
 
     mkdir -p /var/spool/zfsapi
-    chown zfsreplica:www-data /var/spool/zfsapi
+    chown zfsreplica:nginx /var/spool/zfsapi
 
 ##### FreeBSD sudo and perl is in /usr/local/bin and we need to make a link
 
@@ -57,7 +59,7 @@
     
 ##### visudo
 
-Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
+
 
 ##### ctladm
 
