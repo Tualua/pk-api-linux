@@ -162,7 +162,7 @@ def get_islist(rtsroot):
 def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     opt_file = options[0].split('=')[1]
     opt_iqn = options[2].split('=')[1].split(',')[0]
-    opt_serial = "scsi-1FREE_TT_{}".format(deviceid)
+    opt_serial = "1FREE_TT_{}".format(deviceid)
     debug_log("Command: create lun ", "LUN Serial: {}".format(opt_serial), "Device ID: {}\n".format(deviceid))
     print(' File: {} deviceid: {} iqn: {} lun {}'.format(opt_file, deviceid,
           opt_iqn, lun))
