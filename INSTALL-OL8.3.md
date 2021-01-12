@@ -32,14 +32,29 @@
     zpool import data
     zpool set cachefile=/etc/zfs/zpool.cache data
 
-##### Install additional software
+#### NGINX
 
-    
+    dnf -y module disable nginx:1.14
+    dnf -y module enable nginx:1.18
+    dnf -y install nginx
+
+#### uWSGI
+
+    cd ~
+    wget https://projects.unbit.it/downloads/uwsgi-2.0.19.1.tar.gz
+    tar xf uwsgi-2.0.19.1.tar.gz
+    cd uwsgi-2.0.19.1/
+    CFLAGS="-fno-PIE -fPIC -no-pie --static" LDFLAGS="-fno-PIE -fPIC -no-pie" python3 uwsgiconfig.py --build psgi
+    cp uwsgi /usr/bin/
+
+##### iSCSI
+
+    dnf -y install targetcli
 
 ##### Create user to run API
 
     useradd zfsreplica
-    usermod zfsreplica -aG nginx 
+    usermod zfsreplica -aG nginx
     usermod zfsreplica -aG wheel
 
 ##### Create log directory
