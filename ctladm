@@ -30,7 +30,7 @@ def get_devlist(rtsroot, xml_output=False):
                 lun.storage_object.udev_path,
                 tpg.parent_target.wwn
             ])))
-    debug_log("devlist", "noargs")
+    debug_log("Command: devlist", "Args: noargs\n")
     if xml_output:
         xml_root = minidom.Document()
         declaration = xml_root.toxml()  # Used to strip declaration string later
@@ -98,7 +98,7 @@ def get_portlist(rtsroot, xml_output=False):
     for session in sessions:
         islist[session['parent_nodeacl'].parent_tpg.parent_target.wwn] = session['parent_nodeacl'].node_wwn
 
-    debug_log("portlist")
+    debug_log("Command: portlist\n")
     if xml_output:
         xml_root = minidom.Document()
         # Used to strip declaration string later
@@ -154,7 +154,7 @@ def get_islist(rtsroot):
                       session['parent_nodeacl'].node_wwn,
                       session['parent_nodeacl'].parent_tpg.parent_target.wwn]))
                       )
-    debug_log("islist")
+    debug_log("Command: islist\n")
     return islist
 
 
@@ -162,7 +162,7 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     opt_file = options[0].split('=')[1]
     opt_iqn = options[2].split('=')[1].split(',')[0]
     opt_serial = "scsi-1FREE_TT_{}".format(deviceid)
-    debug_log("Command: create lun ", "LUN Serial: {}".format(opt_serial), "Device ID: {}".format(deviceid))
+    debug_log("Command: create lun ", "LUN Serial: {}".format(opt_serial), "Device ID: {}\n".format(deviceid))
     print(' File: {} deviceid: {} iqn: {} lun {}'.format(opt_file, deviceid,
           opt_iqn, lun))
     fm = FabricModule('iscsi')
@@ -177,7 +177,9 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     tpg_lun = LUN(tpg, storage_object=so)
     MappedLUN(na, 0, tpg_lun)
     rtsroot.save_to_file()
-    debug_log("Command: create lun\n", portal_address, options, deviceid, lun, acl, so_dump)
+    debug_log("Command: create lun\n", "Portal address: {}".format(portal_address), 
+              "Options: {}".format(options), "Device ID: {}".format(deviceid),
+              "LUN: {}".format(lun), "ACL: {}".format(acl))
 
 
 def remove_lun(rtsroot, lun):
@@ -190,7 +192,7 @@ def remove_lun(rtsroot, lun):
             tgt_to_delete.delete()
             so_to_delete.delete()
     rtsroot.save_to_file()
-    debug_log("remove lun")
+    debug_log("Command: remove lun LUN: {}".format(lun))
 
 
 def print_result(result):
