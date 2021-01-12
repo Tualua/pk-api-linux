@@ -3,6 +3,10 @@
 
     sudo su
 
+##### visudo
+
+    Uncomment line near the end of the file `%wheel  ALL=(ALL)       NOPASSWD: ALL`
+
 #### Install git
 
     dnf -y install git
@@ -12,8 +16,6 @@
     git clone https://github.com/Tualua/pk-api-linux.git
 
 #### Oracle Linux 8.3
-
-
 ##### Install OpenZFS 2.0.1
 
     dnf -y install oracle-epel-release-el8 -y
@@ -37,19 +39,9 @@
     dnf -y module disable nginx:1.14
     dnf -y module enable nginx:1.18
     dnf -y install nginx
-
-#### uWSGI
-
-    cd ~
-    wget https://projects.unbit.it/downloads/uwsgi-2.0.19.1.tar.gz
-    tar xf uwsgi-2.0.19.1.tar.gz
-    cd uwsgi-2.0.19.1/
-    CFLAGS="-fno-PIE -fPIC -no-pie --static" LDFLAGS="-fno-PIE -fPIC -no-pie" python3 uwsgiconfig.py --build psgi
-    cp uwsgi /usr/bin/
-
-##### iSCSI
-
-    dnf -y install targetcli
+    cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
+    cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
+    cp ~/pk-api-linux/nginx/api.conf /etc/nginx/conf.d/
 
 ##### Create user to run API
 
@@ -67,14 +59,26 @@
     mkdir -p /var/spool/zfsapi
     chown zfsreplica:nginx /var/spool/zfsapi
 
+
+#### uWSGI
+
+    cd ~
+    wget https://projects.unbit.it/downloads/uwsgi-2.0.19.1.tar.gz
+    tar xf uwsgi-2.0.19.1.tar.gz
+    cd uwsgi-2.0.19.1/
+    CFLAGS="-fno-PIE -fPIC -no-pie --static" LDFLAGS="-fno-PIE -fPIC -no-pie" python3 uwsgiconfig.py --build psgi
+    cp uwsgi /usr/bin/
+
+
+##### iSCSI
+
+    dnf -y install targetcli
+
 ##### FreeBSD sudo and perl is in /usr/local/bin and we need to make a link
 
     ln -s /usr/bin/sudo /usr/local/bin/sudo
     ln -s /usr/bin/perl /usr/local/bin/perl
     
-##### visudo
-
-
 
 ##### ctladm
 
