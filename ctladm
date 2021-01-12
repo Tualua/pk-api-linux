@@ -12,6 +12,7 @@ def debug_log(*messages):
     with open("/var/log/ctladm.log", "a") as log_file:
         message = map(lambda x: str(x), list(messages))
         log_file.write('\n'.join(list(message)))
+        log_file.write('\n')
         log_file.close()
 
 
@@ -166,16 +167,15 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     print(' File: {} deviceid: {} iqn: {} lun {}'.format(opt_file, deviceid,
           opt_iqn, lun))
     fm = FabricModule('iscsi')
+    so = BlockStorageObject(lun, opt_file, wwn=opt_serial)
     t = Target(fm, wwn=opt_iqn)
     tpg = TPG(t, 1)
     tpg.enable = True
     tpg.set_attribute("authentication", '0')
-    NetworkPortal(tpg, ip_address=portal_address)
-    na = NodeACL(tpg, acl)
-    so = BlockStorageObject(lun, opt_file, wwn=opt_serial)
-    so_dump = so.dump()
     tpg_lun = LUN(tpg, storage_object=so)
     MappedLUN(na, 0, tpg_lun)
+    na = NodeACL(tpg, acl)
+    NetworkPortal(tpg, ip_address=portal_address)
     rtsroot.save_to_file()
     debug_log("Command: create lun\n", "Portal address: {}".format(portal_address), 
               "Options: {}".format(options), "Device ID: {}".format(deviceid),
