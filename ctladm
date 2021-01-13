@@ -175,7 +175,8 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     tpg_lun = LUN(tpg, storage_object=so)
     na = NodeACL(tpg, acl)
     MappedLUN(na, 0, tpg_lun)
-    NetworkPortal(tpg, ip_address=portal_address)
+    portal = NetworkPortal(tpg, ip_address=portal_address)
+    portal.iser = True
     rtsroot.save_to_file()
     debug_log("Command: create lun\n", "Portal address: {}".format(portal_address), 
               "Options: {}".format(options), "Device ID: {}".format(deviceid),
