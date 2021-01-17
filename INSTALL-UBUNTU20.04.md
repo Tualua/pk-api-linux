@@ -15,10 +15,9 @@
     wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.1/zfs-2.0.1.tar.gz
     tar xf zfs-2.0.1.tar.gz
     cd zfs-2.0.1
-    sh autogen.sh
-    ./configure
-    make -s -j$(nproc) deb-dkms deb
-    dpkg -i zfs-dkms_2.0.1-1_amd64.deb zfs_2.0.1-1_amd64.deb libzfs4_2.0.1-1_amd64.deb libnvpair3_2.0.1-1_amd64.deb libuutil3_2.0.1-1_amd64.deb
+    ./configure --enable-systemd
+    make -j1 deb-utils deb-dkms
+    for file in *.deb; do sudo gdebi -q --non-interactive $file; done
     systemctl enable zfs-import-cache
     systemctl enable zfs-import.target
     modprobe zfs
@@ -69,8 +68,8 @@ Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
 ##### NGINX
 
     cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-    cp ~/pk-api-linux/nginx/nginx.conf /etc/nginx/
-    cp ~/pk-api-linux/nginx/api.conf /etc/nginx/conf.d/
+    cp ~/pk-api-linux/ubuntu20.04/nginx/nginx.conf /etc/nginx/
+    cp ~/pk-api-linux/ubuntu20.04/nginx/api.conf /etc/nginx/conf.d/
     mkdir -p /var/tmp/nginx/cache/default
     mkdir /var/www/api
     rm /etc/nginx/sites-enabled/default
@@ -84,8 +83,8 @@ Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
         
 ##### uWSGI
     mkdir /usr/local/etc/uwsgi
-    cp ~/pk-api-linux/uwsgi/*.ini /usr/local/etc/uwsgi/
-    cp ~/pk-api-linux/uwsgi/uwsgi-app\@.service /etc/systemd/system/
+    cp ~/pk-api-linux/ubuntu20.04/uwsgi/*.ini /usr/local/etc/uwsgi/
+    cp ~/pk-api-linux/ubuntu20.04/uwsgi/uwsgi-app\@.service /etc/systemd/system/
     systemctl enable uwsgi-app@uwsgi_replicate.service --now
     systemctl enable uwsgi-app@uwsgi_api.service --now
 
@@ -117,7 +116,7 @@ You should limit LUNs visibility to hosts by using initiator names in acl. Also 
 
 Create backstore for system disk
 
-    targetcli backstores/block create name=1001 dev=/dev/zvol/data/kvm/desktop/desktop-vm1
+    targetcli backstores/block create name=1001 dev=/dev/zvol/data/kvm/desktop/desktop-vm1 wwn=1FREE_TT_desktop-vm1
     
 Create initiator
 
@@ -143,16 +142,25 @@ Add LUN to initiator
 
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/luns create lun=0 storage_object=/backstores/block/1001
 
+Enable iSER if your hardware supports it
+
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:desktop-vm1/tpg1/portals/192.168.255.1:3260 enable_iser boolean=true
+
 All the same for games disk
 
-    targetcli backstores/block create name=2001 dev=/dev/zvol/data/kvm/desktop/games-vm1
+    targetcli backstores/block create name=2001 dev=/dev/zvol/data/kvm/desktop/games-vm1 wwn=1FREE_TT_games-vm1
     targetcli iscsi/ create wwn=iqn.2016-04.net.playkey.iscsi:games-vm1
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/portals/ delete ip_address=0.0.0.0 ip_port=3260
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/portals/ create ip_address=192.168.255.1
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/ set attribute authentication=0
+    targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/portals/192.168.255.1:3260 enable_iser boolean=true
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/acls create wwn=iqn.2020-09.net.playkey.iscsi:hv:pk-host1
     targetcli /iscsi/iqn.2016-04.net.playkey.iscsi:games-vm1/tpg1/luns create lun=0 storage_object=/backstores/block/2001
     
 Save targetcli config
 
     targetcli saveconfig
+
+#### Host configuration
+
+Copy `60-playkey-iscsi.rules` to `/usr/lib/udev/rules.d/`

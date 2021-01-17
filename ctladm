@@ -176,6 +176,7 @@ def create_lun(rtsroot, portal_address, options, deviceid, lun, acl):
     na = NodeACL(tpg, acl)
     MappedLUN(na, 0, tpg_lun)
     portal = NetworkPortal(tpg, ip_address=portal_address)
+    # Comment next string out if your system doesn't have iSER support
     portal.iser = True
     rtsroot.save_to_file()
     debug_log("Command: create lun\n", "Portal address: {}".format(portal_address), 
