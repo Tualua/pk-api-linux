@@ -64,6 +64,10 @@ Change `%sudo   ALL=(ALL:ALL) ALL` to `%sudo   ALL=(ALL:ALL) NOPASSWD:ALL`
     chmod +x /usr/bin/ctladm
     mkdir /etc/ctladm
     cp ~/pk-api-linux/ctladm.ini /etc/ctladm
+
+##### Change ACLs in ctladm.ini
+
+    vm<N>=<iSCSI initiator iqn>
     
 ##### NGINX
 
