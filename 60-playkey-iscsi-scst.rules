@@ -1,0 +1,1 @@
+KERNEL=="sd*|sr*|cciss*", ENV{DEVTYPE}=="disk", ENV{ID_SERIAL}=="?*", ENV{ID_VENDOR}=="LIO-ORG", SYMLINK+="disk/by-id/scsi-1$env{ID_VENDOR}_$env{ID_MODEL}"
