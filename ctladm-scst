@@ -15,6 +15,7 @@ SYSFS_SCST_LUNS = "/sys/kernel/scst_tgt/targets/copy_manager/"
 SYSFS_SCST_ISCSI_TGTS = "{}/targets/iscsi".format(SYSFS_SCST_ROOT)
 SYSFS_SCST_LUN0_DEV = "ini_groups/allowed_ini/luns/0/device"
 SYSFS_SCST_LUNS_MGMT = "ini_groups/allowed_ini/luns/mgmt"
+SYSFS_SCST_DEV_MGMT = "/sys/kernel/scst_tgt/handlers/vdisk_blockio/mgmt"
 
 
 def safe_cast(val, to_type, default=None):
@@ -133,6 +134,41 @@ def scst_get_lun_wwn(lun):
         return wwns[lun]
     except KeyError:
         return None
+
+
+def scst_get_lun_device(lun):
+    targets = scst_get_iscsi_targets()
+    wwns = {}
+    for target in targets:
+        rel_id_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target,
+                                   "rel_tgt_id")
+        rel_id_file = open(rel_id_path, 'r')
+        rel_id_value = rel_id_file.read().split("\n")[0]
+        rel_id_file.close()
+        wwns[rel_id_value] = target
+    if lun in wwns.keys():
+        target = wwns[lun]
+        lun0_device_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target,
+                                        SYSFS_SCST_LUN0_DEV)
+        lun0_device = str(Path(lun0_device_path).resolve())
+        lun0_device_name = lun0_device[lun0_device.rfind("/")+1:]
+        return lun0_device_name
+    else:
+        return None
+
+
+def scst_delete_device(device):
+    mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
+    mgmt_file.write("del_device {}".format(device))
+    mgmt_file.close()
+
+
+def scst_add_device(filename):
+    mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
+    device_name = filename[filename.rfind("/")+1:]
+    command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
+    mgmt_file.write(command)
+    mgmt_file.close()
 
 
 def scst_get_lun_wwn2(lun):
@@ -326,8 +362,9 @@ def get_islist():
 
 
 def create_lun(options, deviceid, lun):
-    # opt_file = options[0].split('=')[1]
+    opt_file = options[0].split('=')[1]
     opt_wwn = options[2].split('=')[1].split(',')[0]
+    scst_add_device(opt_file)
     mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
                              SYSFS_SCST_LUNS_MGMT)
     command = "add {} 0".format(deviceid)
@@ -338,6 +375,9 @@ def create_lun(options, deviceid, lun):
 
 
 def remove_lun(lun):
+    device = scst_get_lun_device(lun)
+    scst_delete_device(device)
+    '''
     target = scst_get_lun_wwn(lun)
     if target:
         mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target,
@@ -347,6 +387,7 @@ def remove_lun(lun):
         mgmt_file.write(command)
         mgmt_file.close()
     debug_log("Command: remove lun LUN: {}".format(lun))
+    '''
 
 
 def print_result(result):
