@@ -6,6 +6,7 @@ from collections import defaultdict
 import subprocess
 import os
 from pathlib import Path
+from time import sleep
 
 
 SYSFS_SCST_ROOT = "/sys/kernel/scst_tgt"
@@ -161,6 +162,7 @@ def scst_delete_device(device):
     mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
     mgmt_file.write("del_device {}".format(device))
     mgmt_file.close()
+    sleep(1)
 
 
 def scst_add_device(filename):
