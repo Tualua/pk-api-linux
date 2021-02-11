@@ -87,6 +87,17 @@ def scst_get_device_params(device):
     return result
 
 
+def scst_set_device_params(device, params):
+    device_path = os.path.join(SYSFS_SCST_DEVICES, device)
+    for k, v in params.items():
+        param_file = open(os.path.join(device_path, k), 'w')
+        try:
+            param_file.write(v)
+            param_file.close()
+        except Exception as e:
+            print("Error: {} writing {} to {}".format(e, k, device))
+
+
 def scst_get_luns():
     result = {}
     targets = scst_get_iscsi_targets()
@@ -168,9 +179,24 @@ def scst_delete_device(device):
 def scst_add_device(filename):
     mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
     device_name = filename[filename.rfind("/")+1:]
-    command = "add_device {} filename={}; nv_cache=1; rotational=0; t10_vend_id=FREE_TT".format(device_name, filename)
-    mgmt_file.write(command)
-    mgmt_file.close()
+    command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
+    try:
+        mgmt_file.write(command)
+        mgmt_file.close()
+    except OSError as e:
+        print("OS error: {}".format(e))
+
+    device_params = {
+        "t10_vend_id": "FREE_TT"
+    }
+    scst_set_device_params(device_name, device_params)
+    '''
+    t10_vend_id_path = os.path.join(SYSFS_SCST_DEVICES, device_name,
+                                    "t10_vend_id")
+    t10_vend_id_file = open(t10_vend_id_path, "w")
+    t10_vend_id_file.write()
+    t10_vend_id_file.close()
+    '''
 
 
 def scst_get_lun_wwn2(lun):
@@ -379,17 +405,6 @@ def create_lun(options, deviceid, lun):
 def remove_lun(lun):
     device = scst_get_lun_device(lun)
     scst_delete_device(device)
-    '''
-    target = scst_get_lun_wwn(lun)
-    if target:
-        mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target,
-                                 SYSFS_SCST_LUNS_MGMT)
-        command = "del 0"
-        mgmt_file = open(mgmt_path, "w")
-        mgmt_file.write(command)
-        mgmt_file.close()
-    debug_log("Command: remove lun LUN: {}".format(lun))
-    '''
 
 
 def print_result(result):
