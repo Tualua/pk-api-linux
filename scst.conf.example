@@ -1,0 +1,322 @@
+HANDLER vdisk_blockio {
+        DEVICE desktop-master {
+                filename /dev/zvol/data/kvm/desktop/desktop-master-test
+                nv_cache 1
+                rotational 0
+        }
+        DEVICE desktop-vm1 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm1
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm1 {
+                filename /dev/zvol/data/kvm/desktop/games-vm1
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm2 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm2
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm2 {
+                filename /dev/zvol/data/kvm/desktop/games-vm2
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm3 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm3
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm3 {
+                filename /dev/zvol/data/kvm/desktop/games-vm4
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm4 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm4
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm4 {
+                filename /dev/zvol/data/kvm/desktop/games-vm4
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm5 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm5
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm5 {
+                filename /dev/zvol/data/kvm/desktop/games-vm1
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm6 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm6
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm6 {
+                filename /dev/zvol/data/kvm/desktop/games-vm6
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm7 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm7
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm7 {
+                filename /dev/zvol/data/kvm/desktop/games-vm7
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm8 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm8
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm8 {
+                filename /dev/zvol/data/kvm/desktop/games-vm8
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm9 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm9
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm9 {
+                filename /dev/zvol/data/kvm/desktop/games-vm9
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm10 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm10
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm10 {
+                filename /dev/zvol/data/kvm/desktop/games-vm10
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm11 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm11
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm11 {
+                filename /dev/zvol/data/kvm/desktop/games-vm11
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE desktop-vm12 {
+                filename /dev/zvol/data/kvm/desktop/desktop-vm12
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+        DEVICE games-vm12 {
+                filename /dev/zvol/data/kvm/desktop/games-vm12
+                nv_cache 1
+                rotational 0
+                t10_vend_id FREE_TT
+        }
+}
+
+TARGET_DRIVER iscsi {
+        enabled 1
+
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-master-test {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-master-test
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm1 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm1
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+	TARGET iqn.2016-04.net.playkey.iscsi:games-vm1 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm1
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm2 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm2
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm2 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm2
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm3 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm3
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm3 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm3
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host1
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm4 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm4
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host2
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm4 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm4
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host2
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm5 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm5
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host2
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm5 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm5
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host2
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm6 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm6
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host3
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm6 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm6
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host3
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:desktop-vm7 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 desktop-vm7
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host3
+                }
+        }
+        TARGET iqn.2016-04.net.playkey.iscsi:games-vm7 {
+                QueuedCommands 128
+                allowed_portal 192.168.255.2
+                enabled 1
+
+                GROUP allowed_ini {
+                        LUN 0 games-vm7
+
+                        INITIATOR iqn.2020-09.io.minecolo.iscsi:hv:pk-host3
+                }
+        }
+}
