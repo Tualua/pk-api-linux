@@ -5,6 +5,7 @@ from xml.dom import minidom
 from collections import defaultdict
 import subprocess
 import os
+import logging
 from pathlib import Path
 from time import sleep
 
@@ -216,14 +217,6 @@ def exec_shell_command(command):
     return stdout.split('\n')
 
 
-def debug_log(*messages):
-    with open("/var/log/ctladm.log", "a") as log_file:
-        message = map(lambda x: str(x), list(messages))
-        log_file.write('\n'.join(list(message)))
-        log_file.write('\n')
-        log_file.close()
-
-
 def get_devlist(xml_output=False):
     devlist = []
     luns = scst_get_luns()
@@ -245,7 +238,7 @@ def get_devlist(xml_output=False):
                     safe_cast(dev_params['threads_num'], int, 0)
                 ])))
 
-    debug_log("Command: devlist", "Args: noargs\n")
+    logging.info("Command: devlist")
     if xml_output:
         xml_root = minidom.Document()
 
@@ -316,7 +309,7 @@ def get_portlist(xml_output=False):
                     "{},t,0x0101".format(wwn),
                     wwn
                 ])))
-    debug_log("Command: portlist\n")
+    logging.debug("Command: portlist\n")
     if xml_output:
         xml_root = minidom.Document()
         # Used to strip declaration string later
@@ -359,20 +352,13 @@ def get_portlist_qvp(port):
             'Target': scst_get_lun_wwn(v),
             'LUN 0': v
         }
-    '''
-    for lun in rtsroot.luns:
-        portlist[lun.storage_object.name] = {
-            'Target': lun.parent_tpg.parent_target.wwn,
-            'LUN 0': lun.storage_object.name
-        }
-    '''
     try:
         print('Target: {}'.format(portlist[str(port)]['Target']))
         print('LUN 0: {}'.format(portlist[str(port)]['LUN 0']))
     except KeyError:
         # no such port
         pass
-    debug_log("portlist qvp")
+    logging.debug("Command: %s Args: qvp Port: %s", port)
 
 
 def get_islist():
@@ -416,7 +402,9 @@ def print_result(result):
 
 
 def main(args):
-    debug_log(args)
+    logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
+    logging.debug(vars(args))
     if args.command == 'devlist':
         print_result(get_devlist(args.x))
     if args.command == 'islist':
@@ -436,13 +424,24 @@ if __name__ == "__main__":
                                      "zfsapi (SCST)")
     parser.add_argument('command', type=str, action='store',
                         help='ctladm command')
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    parser_devlist = subparsers.add_parser('devlist', help='list devices')
+
+    parser_islist = subparsers.add_parser('islist', help='list sessions')
+
+    parser_portlist = subparsers.add_parser('portlist', help='list ports')
+    parser_portlist.add_argument(
+        '-qvp', type=int, action='store', required=False,
+        help='Omit header, verbose, specify port number')
+
+    parser_create = subparsers.add_parser('create', help='list ports')
+    parser_create.add_argument('-b', type=str, action='store', help='Device type')
+    parser_create.add_argument('-o', type=str, action='append', help='Create options')
+    parser_create.add_argument('-d', type=str, action='store', help='Device ID')
+    parser_create.add_argument('-l', type=str, action='store', help='LUN')
+
     parser.add_argument('-q', action='store_true', help='Omit header')
-    parser.add_argument('-qvp', type=int, action='store', required=False,
-                        help='Omit header, verbose, specify port number')
-    parser.add_argument('-b', type=str, action='store', help='Device type')
-    parser.add_argument('-o', type=str, action='append', help='Create options')
-    parser.add_argument('-d', type=str, action='store', help='Device ID')
-    parser.add_argument('-l', type=str, action='store', help='LUN')
     parser.add_argument('-x', action='store_true', help='XML Output')
 
     args = parser.parse_args()
