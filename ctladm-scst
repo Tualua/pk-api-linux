@@ -94,9 +94,11 @@ def scst_set_device_params(device, params):
         param_file = open(os.path.join(device_path, k), 'w')
         try:
             param_file.write(v)
-            param_file.close()
         except Exception as e:
             print("Error: {} writing {} to {}".format(e, k, device))
+            logging.error("Error: %s writing %s to %s", e, k, device)
+        finally:
+            param_file.close()
 
 
 def scst_get_luns():
@@ -183,21 +185,16 @@ def scst_add_device(filename):
     command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
     try:
         mgmt_file.write(command)
-        mgmt_file.close()
     except OSError as e:
         print("OS error: {}".format(e))
+        logging.error("OS error: %s", e)
+    finally:
+        mgmt_file.close()
 
     device_params = {
         "t10_vend_id": "FREE_TT"
     }
     scst_set_device_params(device_name, device_params)
-    '''
-    t10_vend_id_path = os.path.join(SYSFS_SCST_DEVICES, device_name,
-                                    "t10_vend_id")
-    t10_vend_id_file = open(t10_vend_id_path, "w")
-    t10_vend_id_file.write()
-    t10_vend_id_file.close()
-    '''
 
 
 def scst_get_lun_wwn2(lun):
@@ -435,7 +432,7 @@ if __name__ == "__main__":
         '-qvp', type=int, action='store', required=False,
         help='Omit header, verbose, specify port number')
 
-    parser_create = subparsers.add_parser('create', help='list ports')
+    parser_create = subparsers.add_parser('create', help='create port')
     parser_create.add_argument('-b', type=str, action='store', help='Device type')
     parser_create.add_argument('-o', type=str, action='append', help='Create options')
     parser_create.add_argument('-d', type=str, action='store', help='Device ID')
