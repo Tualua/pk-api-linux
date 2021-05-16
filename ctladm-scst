@@ -443,7 +443,7 @@ if __name__ == "__main__":
     parser_remove = subparsers.add_parser('remove', help='remove port')
     parser_remove.add_argument('-b', type=str, action='store', help='Device type')
     parser_remove.add_argument('-l', type=str, action='store', help='LUN')
-    
+
     logging.debug('Passed arguments: %s', ' '.join(sys.argv[1:]))
     args = parser.parse_args()
     main(args)
