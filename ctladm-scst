@@ -5,6 +5,7 @@ from xml.dom import minidom
 from collections import defaultdict
 import subprocess
 import os
+import logging
 from pathlib import Path
 from time import sleep
 
@@ -39,22 +40,34 @@ def get_iscsi_wwn(link):
 
 
 def scst_get_devices():
-    devices = [device for device in os.listdir(SYSFS_SCST_DEVICES)
-               if os.path.isdir(os.path.join(SYSFS_SCST_DEVICES, device))]
-    return devices
+    if os.path.exists(SYSFS_SCST_DEVICES):
+        devices = [device for device in os.listdir(SYSFS_SCST_DEVICES)
+                   if os.path.isdir(os.path.join(SYSFS_SCST_DEVICES, device))]
+        return devices
+    else:
+        logging.error("%s does not exists", SYSFS_SCST_DEVICES)
+        return None
 
 
 def scst_get_iscsi_targets():
-    targets = [target for target in os.listdir(SYSFS_SCST_ISCSI_TGTS)
-               if os.path.isdir(os.path.join(SYSFS_SCST_ISCSI_TGTS, target))]
-    return targets
+    if os.path.exists(SYSFS_SCST_ISCSI_TGTS):
+        targets = [target for target in os.listdir(SYSFS_SCST_ISCSI_TGTS)
+                   if os.path.isdir(os.path.join(SYSFS_SCST_ISCSI_TGTS, target))]
+        return targets
+    else:
+        logging.error("%s does not exists", SYSFS_SCST_ISCSI_TGTS)
+        return None
 
 
 def scst_get_target_sessions(target):
     sessions_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target, "sessions")
-    sessions = [session for session in os.listdir(sessions_path)
-                if os.path.isdir(os.path.join(sessions_path, session))]
-    return sessions
+    if os.path.exists(sessions_path):
+        sessions = [session for session in os.listdir(sessions_path)
+                    if os.path.isdir(os.path.join(sessions_path, session))]
+        return sessions
+    else:
+        logging.error("%s does not exists", sessions_path)
+        return None
 
 
 def scst_get_portal_addr(target):
@@ -83,6 +96,7 @@ def scst_get_device_params(device):
             result[param] = param_value
         except Exception:
             # Probably we just don't have enough permission to read sysfs file
+            logging.warning("Cannot read %s", os.path.join(device_path, param))
             pass
     return result
 
@@ -93,9 +107,11 @@ def scst_set_device_params(device, params):
         param_file = open(os.path.join(device_path, k), 'w')
         try:
             param_file.write(v)
-            param_file.close()
         except Exception as e:
             print("Error: {} writing {} to {}".format(e, k, device))
+            logging.error("Error: %s writing %s to %s", e, k, device)
+        finally:
+            param_file.close()
 
 
 def scst_get_luns():
@@ -117,18 +133,6 @@ def scst_get_luns():
             result[lun0_filename] = rel_id_value
         except FileNotFoundError:
             pass
-    return result
-
-
-def scst_get_luns2():
-    luns = [device for device in os.listdir(SYSFS_SCST_LUNS)
-            if device != 'mgmt']
-    result = {}
-    for lun in luns:
-        device = os.path.join(SYSFS_SCST_LUNS, lun, "device/filename")
-        device_file = open(device, 'r')
-        device_name = device_file.read().split('\n')[0]
-        result[device_name] = lun
     return result
 
 
@@ -182,31 +186,16 @@ def scst_add_device(filename):
     command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
     try:
         mgmt_file.write(command)
-        mgmt_file.close()
     except OSError as e:
         print("OS error: {}".format(e))
+        logging.error("OS error: %s", e)
+    finally:
+        mgmt_file.close()
 
     device_params = {
         "t10_vend_id": "FREE_TT"
     }
     scst_set_device_params(device_name, device_params)
-    '''
-    t10_vend_id_path = os.path.join(SYSFS_SCST_DEVICES, device_name,
-                                    "t10_vend_id")
-    t10_vend_id_file = open(t10_vend_id_path, "w")
-    t10_vend_id_file.write()
-    t10_vend_id_file.close()
-    '''
-
-
-def scst_get_lun_wwn2(lun):
-    exports_path = os.path.join(SYSFS_SCST_LUNS, lun, "device/exported")
-    exports = os.listdir(exports_path)
-    for export in exports:
-        p = os.path.join(exports_path, export)
-        export_path = str(Path(p).resolve())
-        if "iscsi" in export_path:
-            return get_iscsi_wwn(export_path)
 
 
 def exec_shell_command(command):
@@ -214,14 +203,6 @@ def exec_shell_command(command):
                             stderr=subprocess.STDOUT)
     stdout, stderr = proc.communicate()
     return stdout.split('\n')
-
-
-def debug_log(*messages):
-    with open("/var/log/ctladm.log", "a") as log_file:
-        message = map(lambda x: str(x), list(messages))
-        log_file.write('\n'.join(list(message)))
-        log_file.write('\n')
-        log_file.close()
 
 
 def get_devlist(xml_output=False):
@@ -245,7 +226,7 @@ def get_devlist(xml_output=False):
                     safe_cast(dev_params['threads_num'], int, 0)
                 ])))
 
-    debug_log("Command: devlist", "Args: noargs\n")
+    logging.info("Command: devlist")
     if xml_output:
         xml_root = minidom.Document()
 
@@ -316,7 +297,7 @@ def get_portlist(xml_output=False):
                     "{},t,0x0101".format(wwn),
                     wwn
                 ])))
-    debug_log("Command: portlist\n")
+    logging.debug("Command: portlist\n")
     if xml_output:
         xml_root = minidom.Document()
         # Used to strip declaration string later
@@ -359,20 +340,13 @@ def get_portlist_qvp(port):
             'Target': scst_get_lun_wwn(v),
             'LUN 0': v
         }
-    '''
-    for lun in rtsroot.luns:
-        portlist[lun.storage_object.name] = {
-            'Target': lun.parent_tpg.parent_target.wwn,
-            'LUN 0': lun.storage_object.name
-        }
-    '''
     try:
         print('Target: {}'.format(portlist[str(port)]['Target']))
         print('LUN 0: {}'.format(portlist[str(port)]['LUN 0']))
     except KeyError:
         # no such port
         pass
-    debug_log("portlist qvp")
+    logging.debug("Command: %s Args: qvp Port: %s", port)
 
 
 def get_islist():
@@ -386,6 +360,7 @@ def get_islist():
                           session,
                           target]))
                           )
+    logging.debug("Command: islist")
     return islist
 
 
@@ -396,15 +371,21 @@ def create_lun(options, deviceid, lun):
     mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
                              SYSFS_SCST_LUNS_MGMT)
     command = "add {} 0".format(deviceid)
-
+    logging.debug(
+        "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
     mgmt_file = open(mgmt_path, "w")
-    mgmt_file.write(command)
-    mgmt_file.close()
+    try:
+        mgmt_file.write(command)
+    except Exception as e:
+        logging.error("Cannot write to %s Error: ", e)
+    finally:
+        mgmt_file.close()
 
 
 def remove_lun(lun):
     device = scst_get_lun_device(lun)
     scst_delete_device(device)
+    logging.debug("Command: remove LUN: %s", lun)
 
 
 def print_result(result):
@@ -416,7 +397,9 @@ def print_result(result):
 
 
 def main(args):
-    debug_log(args)
+    logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
+    logging.debug(vars(args))
     if args.command == 'devlist':
         print_result(get_devlist(args.x))
     if args.command == 'islist':
@@ -436,13 +419,24 @@ if __name__ == "__main__":
                                      "zfsapi (SCST)")
     parser.add_argument('command', type=str, action='store',
                         help='ctladm command')
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    parser_devlist = subparsers.add_parser('devlist', help='list devices')
+
+    parser_islist = subparsers.add_parser('islist', help='list sessions')
+
+    parser_portlist = subparsers.add_parser('portlist', help='list ports')
+    parser_portlist.add_argument(
+        '-qvp', type=int, action='store', required=False,
+        help='Omit header, verbose, specify port number')
+
+    parser_create = subparsers.add_parser('create', help='create port')
+    parser_create.add_argument('-b', type=str, action='store', help='Device type')
+    parser_create.add_argument('-o', type=str, action='append', help='Create options')
+    parser_create.add_argument('-d', type=str, action='store', help='Device ID')
+    parser_create.add_argument('-l', type=str, action='store', help='LUN')
+
     parser.add_argument('-q', action='store_true', help='Omit header')
-    parser.add_argument('-qvp', type=int, action='store', required=False,
-                        help='Omit header, verbose, specify port number')
-    parser.add_argument('-b', type=str, action='store', help='Device type')
-    parser.add_argument('-o', type=str, action='append', help='Create options')
-    parser.add_argument('-d', type=str, action='store', help='Device ID')
-    parser.add_argument('-l', type=str, action='store', help='LUN')
     parser.add_argument('-x', action='store_true', help='XML Output')
 
     args = parser.parse_args()
