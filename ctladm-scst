@@ -281,55 +281,58 @@ def get_devlist(xml_output=False):
         return [dev[0:6] for dev in devlist]
 
 
-def get_portlist(xml_output=False):
-    logging.debug("Command: portlist")
-    portlist = []
-    luns = scst_get_luns()
-    for dev in scst_get_devices():
-        dev_params = scst_get_device_params(dev)
-        if dev_params['filename']:
-            if dev_params['filename'] in luns.keys():
-                wwn = scst_get_lun_wwn(luns[dev_params['filename']])
-                portlist.append(list(map(lambda x: str(x), [
-                    luns[dev_params['filename']],
-                    "YES" if dev_params['active'] == '1' else "NO",
-                    "iscsi",
-                    "iscsi",
-                    "{},t,0x0101".format(wwn),
-                    wwn
-                ])))
-    if xml_output:
-        xml_root = minidom.Document()
-        # Used to strip declaration string later
-        declaration = xml_root.toxml()
-
-        xml = xml_root.createElement('ctlportlist')
-        xml_root.appendChild(xml)
-        for port in portlist:
-            targ_port = xml_root.createElement('targ_port')
-            targ_port.setAttribute('id', port[0])
-            elem = xml_root.createElement('lun')
-            elem.setAttribute('id', '0')
-            text = xml_root.createTextNode(port[0])
-            elem.appendChild(text)
-            targ_port.appendChild(elem)
-            elem = xml_root.createElement('target')
-            text = xml_root.createTextNode(port[5])
-            elem.appendChild(text)
-            targ_port.appendChild(elem)
-            elem = xml_root.createElement('initiator')
-            initiator = ""
-            sessions = scst_get_target_sessions(port[5])
-            if sessions:
-                initiator = sessions[0]
-            text = xml_root.createTextNode(initiator)
-            elem.appendChild(text)
-            targ_port.appendChild(elem)
-            xml.appendChild(targ_port)
-        xml_str = xml_root.toprettyxml(indent="\t")[(len(declaration)+1):]
-        return xml_str
+def get_portlist(port=-1, verbose=False, xml_output=False):
+    logging.debug("Command: portlist Verbose: %s XML: %s Port: %s", verbose, xml_output, port)
+    if verbose:
+        print("verbose")
     else:
-        return [port[0:5] for port in portlist]
+        portlist = []
+        luns = scst_get_luns()
+        for dev in scst_get_devices():
+            dev_params = scst_get_device_params(dev)
+            if dev_params['filename']:
+                if dev_params['filename'] in luns.keys():
+                    wwn = scst_get_lun_wwn(luns[dev_params['filename']])
+                    portlist.append(list(map(lambda x: str(x), [
+                        luns[dev_params['filename']],
+                        "YES" if dev_params['active'] == '1' else "NO",
+                        "iscsi",
+                        "iscsi",
+                        "{},t,0x0101".format(wwn),
+                        wwn
+                    ])))
+        if xml_output:
+            xml_root = minidom.Document()
+            # Used to strip declaration string later
+            declaration = xml_root.toxml()
+
+            xml = xml_root.createElement('ctlportlist')
+            xml_root.appendChild(xml)
+            for port in portlist:
+                targ_port = xml_root.createElement('targ_port')
+                targ_port.setAttribute('id', port[0])
+                elem = xml_root.createElement('lun')
+                elem.setAttribute('id', '0')
+                text = xml_root.createTextNode(port[0])
+                elem.appendChild(text)
+                targ_port.appendChild(elem)
+                elem = xml_root.createElement('target')
+                text = xml_root.createTextNode(port[5])
+                elem.appendChild(text)
+                targ_port.appendChild(elem)
+                elem = xml_root.createElement('initiator')
+                initiator = ""
+                sessions = scst_get_target_sessions(port[5])
+                if sessions:
+                    initiator = sessions[0]
+                text = xml_root.createTextNode(initiator)
+                elem.appendChild(text)
+                targ_port.appendChild(elem)
+                xml.appendChild(targ_port)
+            xml_str = xml_root.toprettyxml(indent="\t")[(len(declaration)+1):]
+            return xml_str
+        else:
+            return [port[0:5] for port in portlist]
 
 
 def get_portlist_qvp(port):
@@ -405,10 +408,8 @@ def main(args):
         print_result(get_devlist(args.x))
     if args.command == 'islist':
         print_result(get_islist())
-    if args.command == 'portlist' and args.qvp is None:
+    if args.command == 'portlist':
         print_result(get_portlist(args.x))
-    if args.command == 'portlist' and args.qvp is not None:
-        get_portlist_qvp(args.qvp)
     if args.command == 'create':
         create_lun(args.o, args.d, args.l)
     if args.command == 'remove':
@@ -427,9 +428,9 @@ if __name__ == "__main__":
 
     parser_portlist = subparsers.add_parser('portlist', help='list ports')
     parser_portlist.add_argument('-q', action='store_true', help='Omit header')
+    parser_portlist.add_argument('-v', action='store_true', help='Verbose')
     parser_portlist.add_argument(
-         '-qvp', type=int, action='store', required=False,
-         help='Omit header, verbose, specify port number')
+         '-p', type=int, action='store', required=False, help='port number')
     parser_portlist.add_argument('-x', action='store_true', help='XML Output')
 
     parser_create = subparsers.add_parser('create', help='create port')
