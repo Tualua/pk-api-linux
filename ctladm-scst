@@ -40,22 +40,34 @@ def get_iscsi_wwn(link):
 
 
 def scst_get_devices():
-    devices = [device for device in os.listdir(SYSFS_SCST_DEVICES)
-               if os.path.isdir(os.path.join(SYSFS_SCST_DEVICES, device))]
-    return devices
+    if os.path.exists(SYSFS_SCST_DEVICES):
+        devices = [device for device in os.listdir(SYSFS_SCST_DEVICES)
+                   if os.path.isdir(os.path.join(SYSFS_SCST_DEVICES, device))]
+        return devices
+    else:
+        logging.error("%s does not exists", SYSFS_SCST_DEVICES)
+        return None
 
 
 def scst_get_iscsi_targets():
-    targets = [target for target in os.listdir(SYSFS_SCST_ISCSI_TGTS)
-               if os.path.isdir(os.path.join(SYSFS_SCST_ISCSI_TGTS, target))]
-    return targets
+    if os.path.exists(SYSFS_SCST_ISCSI_TGTS):
+        targets = [target for target in os.listdir(SYSFS_SCST_ISCSI_TGTS)
+                   if os.path.isdir(os.path.join(SYSFS_SCST_ISCSI_TGTS, target))]
+        return targets
+    else:
+        logging.error("%s does not exists", SYSFS_SCST_ISCSI_TGTS)
+        return None
 
 
 def scst_get_target_sessions(target):
     sessions_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, target, "sessions")
-    sessions = [session for session in os.listdir(sessions_path)
-                if os.path.isdir(os.path.join(sessions_path, session))]
-    return sessions
+    if os.path.exists(sessions_path):
+        sessions = [session for session in os.listdir(sessions_path)
+                    if os.path.isdir(os.path.join(sessions_path, session))]
+        return sessions
+    else:
+        logging.error("%s does not exists", sessions_path)
+        return None
 
 
 def scst_get_portal_addr(target):
@@ -84,6 +96,7 @@ def scst_get_device_params(device):
             result[param] = param_value
         except Exception:
             # Probably we just don't have enough permission to read sysfs file
+            logging.warning("Cannot read %s", os.path.join(device_path, param))
             pass
     return result
 
@@ -120,18 +133,6 @@ def scst_get_luns():
             result[lun0_filename] = rel_id_value
         except FileNotFoundError:
             pass
-    return result
-
-
-def scst_get_luns2():
-    luns = [device for device in os.listdir(SYSFS_SCST_LUNS)
-            if device != 'mgmt']
-    result = {}
-    for lun in luns:
-        device = os.path.join(SYSFS_SCST_LUNS, lun, "device/filename")
-        device_file = open(device, 'r')
-        device_name = device_file.read().split('\n')[0]
-        result[device_name] = lun
     return result
 
 
@@ -195,16 +196,6 @@ def scst_add_device(filename):
         "t10_vend_id": "FREE_TT"
     }
     scst_set_device_params(device_name, device_params)
-
-
-def scst_get_lun_wwn2(lun):
-    exports_path = os.path.join(SYSFS_SCST_LUNS, lun, "device/exported")
-    exports = os.listdir(exports_path)
-    for export in exports:
-        p = os.path.join(exports_path, export)
-        export_path = str(Path(p).resolve())
-        if "iscsi" in export_path:
-            return get_iscsi_wwn(export_path)
 
 
 def exec_shell_command(command):
@@ -369,6 +360,7 @@ def get_islist():
                           session,
                           target]))
                           )
+    logging.debug("Command: islist")
     return islist
 
 
@@ -379,15 +371,21 @@ def create_lun(options, deviceid, lun):
     mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
                              SYSFS_SCST_LUNS_MGMT)
     command = "add {} 0".format(deviceid)
-
+    logging.debug(
+        "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
     mgmt_file = open(mgmt_path, "w")
-    mgmt_file.write(command)
-    mgmt_file.close()
+    try:
+        mgmt_file.write(command)
+    except Exception as e:
+        logging.error("Cannot write to %s Error: ", e)
+    finally:
+        mgmt_file.close()
 
 
 def remove_lun(lun):
     device = scst_get_lun_device(lun)
     scst_delete_device(device)
+    logging.debug("Command: remove LUN: %s", lun)
 
 
 def print_result(result):
