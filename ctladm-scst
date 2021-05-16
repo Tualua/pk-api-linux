@@ -5,6 +5,7 @@ from xml.dom import minidom
 from collections import defaultdict
 import subprocess
 import os
+import sys
 import logging
 from pathlib import Path
 from time import sleep
@@ -400,8 +401,6 @@ def print_result(result):
 
 
 def main(args):
-    logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
-                        level=logging.DEBUG)
     logging.info("Running %s command", args.command)
     logging.info("Arguments: %s", vars(args))
     if args.command == 'devlist':
@@ -417,6 +416,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
     parser = argparse.ArgumentParser(description="Linux ctladm for PlayKey"
                                      "zfsapi (SCST)")
     subparsers = parser.add_subparsers(dest='command', help='sub-command help')
@@ -441,6 +442,7 @@ if __name__ == "__main__":
 
     parser_remove = subparsers.add_parser('remove', help='remove port')
     parser_remove.add_argument('-l', type=str, action='store', help='LUN')
-
+    
+    logging.debug("Passed arguments: %s", sys.argv[1:])
     args = parser.parse_args()
     main(args)
