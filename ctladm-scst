@@ -285,7 +285,19 @@ def get_devlist(xml_output=False):
 def get_portlist(port=-1, verbose=False, xml_output=False):
     logging.debug("Command: portlist Verbose: %s XML: %s Port: %s", verbose, xml_output, port)
     if verbose:
-        print("verbose")
+        portlist = {}
+    luns = scst_get_luns()
+    for k, v in luns.items():
+        portlist[v] = {
+            'Target': scst_get_lun_wwn(v),
+            'LUN 0': v
+        }
+    try:
+        print('Target: {}'.format(portlist[str(port)]['Target']))
+        print('LUN 0: {}'.format(portlist[str(port)]['LUN 0']))
+    except KeyError:
+        # no such port
+        pass
     else:
         portlist = []
         luns = scst_get_luns()
@@ -408,7 +420,7 @@ def main(args):
     if args.command == 'islist':
         print_result(get_islist())
     if args.command == 'portlist':
-        print_result(get_portlist(args.x))
+        print_result(get_portlist(args.p, args.v, args.x))
     if args.command == 'create':
         create_lun(args.o, args.d, args.l)
     if args.command == 'remove':
@@ -430,8 +442,7 @@ if __name__ == "__main__":
     parser_portlist = subparsers.add_parser('portlist', help='list ports')
     parser_portlist.add_argument('-q', action='store_true', help='Omit header')
     parser_portlist.add_argument('-v', action='store_true', help='Verbose')
-    parser_portlist.add_argument(
-         '-p', type=int, action='store', required=False, help='port number')
+    parser_portlist.add_argument('-p', type=int, action='store', required=False, help='port number')
     parser_portlist.add_argument('-x', action='store_true', help='XML Output')
 
     parser_create = subparsers.add_parser('create', help='create port')
@@ -441,8 +452,9 @@ if __name__ == "__main__":
     parser_create.add_argument('-l', type=str, action='store', help='LUN')
 
     parser_remove = subparsers.add_parser('remove', help='remove port')
+    parser_create.add_argument('-b', type=str, action='store', help='Device type')
     parser_remove.add_argument('-l', type=str, action='store', help='LUN')
-    
+
     logging.debug("Passed arguments: %s", sys.argv[1:])
     args = parser.parse_args()
     main(args)
