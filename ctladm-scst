@@ -96,7 +96,7 @@ def scst_get_device_params(device):
             result[param] = param_value
         except Exception:
             # Probably we just don't have enough permission to read sysfs file
-            logging.warning("Cannot read %s", os.path.join(device_path, param))
+            # logging.warning("Cannot read %s", os.path.join(device_path, param))
             pass
     return result
 
@@ -400,6 +400,7 @@ def main(args):
     logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
                         level=logging.DEBUG)
     logging.debug(vars(args))
+    logging.info("Running %s command", args.command)
     if args.command == 'devlist':
         print_result(get_devlist(args.x))
     if args.command == 'islist':
