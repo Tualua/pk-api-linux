@@ -333,7 +333,7 @@ def get_portlist(xml_output=False):
 
 
 def get_portlist_qvp(port):
-    logging.debug("Command: %s Args: qvp Port: %s", port)
+    logging.debug("Command: portlist Args: qvp Port: %s", port)
     portlist = {}
     luns = scst_get_luns()
     for k, v in luns.items():
@@ -350,6 +350,7 @@ def get_portlist_qvp(port):
 
 
 def get_islist():
+    logging.debug("Command: islist")
     islist = []
     targets = scst_get_iscsi_targets()
     for target in targets:
@@ -360,19 +361,18 @@ def get_islist():
                           session,
                           target]))
                           )
-    logging.debug("Command: islist")
     return islist
 
 
 def create_lun(options, deviceid, lun):
     opt_file = options[0].split('=')[1]
     opt_wwn = options[2].split('=')[1].split(',')[0]
+    logging.debug(
+        "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
     scst_add_device(opt_file)
     mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
                              SYSFS_SCST_LUNS_MGMT)
     command = "add {} 0".format(deviceid)
-    logging.debug(
-        "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
     mgmt_file = open(mgmt_path, "w")
     try:
         mgmt_file.write(command)
@@ -418,18 +418,19 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Linux ctladm for PlayKey"
                                      "zfsapi (SCST)")
-    parser.add_argument('command', type=str, action='store',
-                        help='ctladm command')
-    subparsers = parser.add_subparsers(help='sub-command help')
+    subparsers = parser.add_subparsers(dest='command', help='sub-command help')
 
     parser_devlist = subparsers.add_parser('devlist', help='list devices')
+    parser_devlist.add_argument('-x', action='store_true', help='XML Output')
 
     parser_islist = subparsers.add_parser('islist', help='list sessions')
 
     parser_portlist = subparsers.add_parser('portlist', help='list ports')
+    parser_portlist.add_argument('-q', action='store_true', help='Omit header')
     parser_portlist.add_argument(
-        '-qvp', type=int, action='store', required=False,
-        help='Omit header, verbose, specify port number')
+         '-qvp', type=int, action='store', required=False,
+         help='Omit header, verbose, specify port number')
+    parser_portlist.add_argument('-x', action='store_true', help='XML Output')
 
     parser_create = subparsers.add_parser('create', help='create port')
     parser_create.add_argument('-b', type=str, action='store', help='Device type')
@@ -437,8 +438,8 @@ if __name__ == "__main__":
     parser_create.add_argument('-d', type=str, action='store', help='Device ID')
     parser_create.add_argument('-l', type=str, action='store', help='LUN')
 
-    parser.add_argument('-q', action='store_true', help='Omit header')
-    parser.add_argument('-x', action='store_true', help='XML Output')
+    parser_remove = subparsers.add_parser('remove', help='remove port')
+    parser_remove.add_argument('-l', type=str, action='store', help='LUN')
 
     args = parser.parse_args()
     main(args)
