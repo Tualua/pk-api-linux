@@ -96,7 +96,7 @@ def scst_get_device_params(device):
             result[param] = param_value
         except Exception:
             # Probably we just don't have enough permission to read sysfs file
-            logging.warning("Cannot read %s", os.path.join(device_path, param))
+            # logging.warning("Cannot read %s", os.path.join(device_path, param))
             pass
     return result
 
@@ -206,6 +206,7 @@ def exec_shell_command(command):
 
 
 def get_devlist(xml_output=False):
+    logging.debug("Command: devlist")
     devlist = []
     luns = scst_get_luns()
 
@@ -226,7 +227,6 @@ def get_devlist(xml_output=False):
                     safe_cast(dev_params['threads_num'], int, 0)
                 ])))
 
-    logging.info("Command: devlist")
     if xml_output:
         xml_root = minidom.Document()
 
@@ -282,6 +282,7 @@ def get_devlist(xml_output=False):
 
 
 def get_portlist(xml_output=False):
+    logging.debug("Command: portlist")
     portlist = []
     luns = scst_get_luns()
     for dev in scst_get_devices():
@@ -297,7 +298,6 @@ def get_portlist(xml_output=False):
                     "{},t,0x0101".format(wwn),
                     wwn
                 ])))
-    logging.debug("Command: portlist\n")
     if xml_output:
         xml_root = minidom.Document()
         # Used to strip declaration string later
@@ -333,6 +333,7 @@ def get_portlist(xml_output=False):
 
 
 def get_portlist_qvp(port):
+    logging.debug("Command: %s Args: qvp Port: %s", port)
     portlist = {}
     luns = scst_get_luns()
     for k, v in luns.items():
@@ -346,7 +347,6 @@ def get_portlist_qvp(port):
     except KeyError:
         # no such port
         pass
-    logging.debug("Command: %s Args: qvp Port: %s", port)
 
 
 def get_islist():
@@ -399,7 +399,8 @@ def print_result(result):
 def main(args):
     logging.basicConfig(filename='/var/log/ctladm.log', format='%(asctime)s:%(levelname)s:%(message)s',
                         level=logging.DEBUG)
-    logging.debug(vars(args))
+    logging.info("Running %s command", args.command)
+    logging.info("Arguments: %s", vars(args))
     if args.command == 'devlist':
         print_result(get_devlist(args.x))
     if args.command == 'islist':
