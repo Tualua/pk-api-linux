@@ -53,7 +53,7 @@ def write_scst_config(config, path):
     file_scst_config.close()
 
 
-def add_device_config(config, name, bs=4096):
+def add_device_config(config, name):
     filename = "/dev/zvol/data/kvm/desktop/{}".format(name)
     if config.find(filename) <= 0:
         dev_config = "\tDEVICE {} {{\n" \
@@ -61,7 +61,6 @@ def add_device_config(config, name, bs=4096):
                     "\t\tnv_cache 1\n" \
                     "\t\trotational 0\n" \
                     "\t\tt10_vend_id FREE_TT\n" \
-                    "\t\tblocksize {}\n" \
                     "\t}}\n".format(name, filename, bs)
         # print(dev_config)
         pos1 = config.find("TARGET_DRIVER")
