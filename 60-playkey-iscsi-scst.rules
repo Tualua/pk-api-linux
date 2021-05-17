@@ -1,1 +1,2 @@
 KERNEL=="sd*|sr*|cciss*", ENV{DEVTYPE}=="disk", ENV{ID_SERIAL}=="?*", ENV{ID_VENDOR}=="FREE_TT", SYMLINK+="disk/by-id/scsi-1$env{ID_VENDOR}_$env{ID_MODEL}"
+KERNEL=="sd*|sr*|cciss*", ENV{DEVTYPE}=="partition", ENV{ID_SERIAL}=="?*", ENV{ID_VENDOR}=="FREE_TT", SYMLINK+="disk/by-id/scsi-1$env{ID_VENDOR}_$env{ID_MODEL}-part%n"
