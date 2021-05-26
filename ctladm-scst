@@ -184,7 +184,7 @@ def scst_delete_device(device):
 def scst_add_device(filename):
     mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
     device_name = filename[filename.rfind("/")+1:]
-    command = "add_device {} filename={}; nv_cache=1; rotational=0; blocksize=4096".format(device_name, filename)
+    command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
     try:
         mgmt_file.write(command)
     except OSError as e:
