@@ -20,19 +20,17 @@
 
     dnf -y install oracle-epel-release-el8 -y
     dnf -y install gcc make autoconf automake libtool rpm-build dkms libtirpc-devel libblkid-devel libuuid-devel libudev-devel openssl-devel zlib-devel libaio-devel libattr-devel elfutils-libelf-devel kernel-uek-devel-$(uname -r) python3 python3-devel python3-setuptools python3-cffi libffi-devel
+    exit
     cd ~
-    wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.1/zfs-2.0.1.tar.gz
-    tar xf zfs-2.0.1.tar.gz
-    cd zfs-2.0.1
-    sh autogen.sh
+    wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.4/zfs-2.0.4.tar.gz
+    tar xf zfs-2.0.4.tar.gz
+    cd zfs-2.0.4
     ./configure
-    make -s -j$(nproc) rpm-dkms rpm
-    dnf -y localinstall zfs-dkms-2.0.1-1.el8.noarch.rpm libnvpair3-2.0.1-1.el8.x86_64.rpm libuutil3-2.0.1-1.el8.x86_64.rpm libzfs4-2.0.1-1.el8.x86_64.rpm libzpool4-2.0.1-1.el8.x86_64.rpm python3-pyzfs-2.0.1-1.el8.noarch.rpm zfs-2.0.1-1.el8.x86_64.rpm
-    systemctl enable zfs-import-cache
-    systemctl enable zfs-import.target
+    make -j1 rpm-utils rpm-dkms
+    sudo yum localinstall *.$(uname -p).rpm *.noarch.rpm    
+    sudo su
     modprobe zfs
     zpool import data
-    zpool set cachefile=/etc/zfs/zpool.cache data
 
 #### NGINX
 
