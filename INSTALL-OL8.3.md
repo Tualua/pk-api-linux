@@ -79,6 +79,7 @@
 
 #### uWSGI
 
+    dnf -y install expat-devel
     cd ~
     wget https://projects.unbit.it/downloads/uwsgi-2.0.19.1.tar.gz
     tar xf uwsgi-2.0.19.1.tar.gz
@@ -87,6 +88,7 @@
     cp uwsgi /usr/bin/
     cpan install Data::UUID
     cpan install Devel::StackTrace
+    cpan install XML::Parser
     mkdir /usr/local/etc/uwsgi
     cp ~/pk-api-linux/ol8.3/uwsgi/*.ini /usr/local/etc/uwsgi/
     cp ~/pk-api-linux/ol8.3/uwsgi/uwsgi-app\@.service /etc/systemd/system/
