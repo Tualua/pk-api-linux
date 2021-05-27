@@ -111,6 +111,11 @@
     spawned uWSGI worker 3 (pid: 277664, cores: 1)
     *** Stats server enabled on 127.0.0.1:1717 fd: 16 ***
 
+#### mbuffer for replication
+
+    dnf -y install mbuffer
+    ln -s /bin/mbuffer /usr/local/bin/mbuffer
+
 ##### iSCSI
 
     dnf -y install targetcli
