@@ -134,7 +134,6 @@
 
     cp ~/pk-api-linux/ctladm /usr/bin/ctladm
     chmod +x /usr/bin/ctladm
-    mkdir /etc/ctladm
         
 ##### Check API
 
