@@ -1,0 +1,18 @@
+[Unit]
+Description=Generic SCSI target subsystem
+After=network.target
+Conflicts=shutdown.target
+ConditionPathExists=/etc/scst.conf
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/lib/systemd/scst-load-modules.sh
+ExecStart=/usr/sbin/iscsi-scstd
+ExecStart=/usr/sbin/scstadmin -config /etc/scst.conf
+ExecStop=/usr/sbin/scstadmin -force -noprompt -clear_config
+ExecStop=/bin/kill -9 /usr/sbin/iscsi-scstd
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
