@@ -155,13 +155,20 @@ def scst_get_lun_wwn(lun):
 
 
 def scst_get_dev_wwn(dev):
-    path_export = "{}/{}/exported/export0".format(SYSFS_SCST_DEVICES, dev)
-    try:
-        wwn = os.readlink(path_export).split("/")[5]
-    except OSError:
-        wwn = None
-    finally:
-        return wwn
+    wwns = []
+    path_exports = "{}/{}/exported".format(SYSFS_SCST_DEVICES, dev)
+    exports = os.listdir(path_exports)
+    if len(exports) > 0:
+        for export in exports:
+            path_export = "{}/{}/exported/{}".format(SYSFS_SCST_DEVICES, dev, export)
+            if 'iscsi' in str(Path(path_export).resolve()):
+                wwns.append(os.readlink(path_export).split("/")[5])
+        if len(wwns) > 0:
+            return wwns[0]
+        else:
+            return None
+    else:
+        return None
 
 
 def scst_get_lun_device(lun):
@@ -389,7 +396,7 @@ def create_lun(options, deviceid, lun):
         "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
     if scst_add_device(opt_file):
         mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
-                                SYSFS_SCST_LUNS_MGMT)
+                                 SYSFS_SCST_LUNS_MGMT)
         command = "add {} 0".format(deviceid)
         mgmt_file = open(mgmt_path, "w")
         try:

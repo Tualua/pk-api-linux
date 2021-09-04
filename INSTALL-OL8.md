@@ -1,4 +1,3 @@
-
 #### Enter root shell
 
     sudo su
@@ -22,7 +21,7 @@
     dnf -y install gcc make autoconf automake libtool rpm-build dkms libtirpc-devel libblkid-devel libuuid-devel libudev-devel openssl-devel zlib-devel libaio-devel libattr-devel elfutils-libelf-devel kernel-uek-devel-$(uname -r) python3 python3-devel python3-setuptools python3-cffi libffi-devel
     exit
     cd ~
-    wget https://github.com/openzfs/zfs/releases/download/zfs-2.0.4/zfs-2.0.4.tar.gz
+    wget https://github.com/openzfs/zfs/releases/download/zfs-2.1.0/zfs-2.1.0.tar.gz
     tar xf zfs-2.0.4.tar.gz
     cd zfs-2.0.4
     ./configure
@@ -38,13 +37,13 @@
     dnf -y module enable nginx:1.18
     dnf -y install nginx
     cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.backup
-    cp ~/pk-api-linux/ol8.3/nginx/nginx.conf /etc/nginx/
-    cp ~/pk-api-linux/ol8.3/nginx/api.conf /etc/nginx/conf.d/
+    cp ~/pk-api-linux/ol8/nginx/nginx.conf /etc/nginx/
+    cp ~/pk-api-linux/ol8/nginx/api.conf /etc/nginx/conf.d/
     mkdir -p /var/cache/httpd/default
     mkdir -p /var/cache/httpd/mobile
     mkdir -p /var/cache/httpd/temp
     mkdir -p /var/www/api
-    semodule -i ~/pk-api-linux/ol8.3/selinux/nginx_custom.pp
+    semodule -i ~/pk-api-linux/ol8/selinux/nginx_custom.pp
 
 ###### Check nginx config syntax
 
@@ -90,8 +89,8 @@
     cpan install Devel::StackTrace
     cpan install XML::Parser
     mkdir /usr/local/etc/uwsgi
-    cp ~/pk-api-linux/ol8.3/uwsgi/*.ini /usr/local/etc/uwsgi/
-    cp ~/pk-api-linux/ol8.3/uwsgi/uwsgi-app\@.service /etc/systemd/system/
+    cp ~/pk-api-linux/ol8/uwsgi/*.ini /usr/local/etc/uwsgi/
+    cp ~/pk-api-linux/ol8/uwsgi/uwsgi-app\@.service /etc/systemd/system/
     systemctl enable uwsgi-app@uwsgi_replicate.service --now
     systemctl enable uwsgi-app@uwsgi_api.service --now
 
@@ -120,15 +119,22 @@
 
 ##### iSCSI
 
+    wget https://sourceforge.net/code-snapshots/svn/s/sc/scst/svn/scst-svn-r9506-branches-3.5.x.zip
+    unzip scst-svn-r9506-branches-3.5.x.zip
+    cd scst-svn-r9506-branches-3.5.x/
+    make 2release
+    make scst-dkms-rpm
+    make rpm
+    cd /usr/src/packages/RPMS/x86_64/
+    yum -y localinstall scst-dkms-3.5.0-1.el8.x86_64.rpm scst-dkms-userspace-3.5.0-1.el8.x86_64.rpm
     
 
 ##### ctladm
 
-    cp ~/pk-api-linux/ctladm-scst /usr/bin/ctladm
+    cp ~/pk-api-linux/ctladm /usr/bin/ctladm
     chmod +x /usr/bin/ctladm
     mkdir /etc/ctladm
-    cp ~/pk-api-linux/ctladm.ini /etc/ctladm
-    
+        
 ##### Check API
 
     curl -sS "http://localhost/api/?action=status"
