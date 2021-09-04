@@ -1,6 +1,7 @@
 [Unit]
 Description=Generic SCSI target subsystem
 After=network.target
+After=zfs.target
 Conflicts=shutdown.target
 ConditionPathExists=/etc/scst.conf
 
