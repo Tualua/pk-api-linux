@@ -120,11 +120,11 @@
 
 ##### iSCSI
 
-    dnf -y install targetcli
+    
 
 ##### ctladm
 
-    cp ~/pk-api-linux/ctladm /usr/bin/
+    cp ~/pk-api-linux/ctladm-scst /usr/bin/ctladm
     chmod +x /usr/bin/ctladm
     mkdir /etc/ctladm
     cp ~/pk-api-linux/ctladm.ini /etc/ctladm

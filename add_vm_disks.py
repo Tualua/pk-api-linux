@@ -2,6 +2,9 @@
 import argparse
 import subprocess
 
+POOL_OS = 'data2'
+POOL_GAMES = 'data'
+
 
 # Wrapper for shell command excecution
 def exec_shell_command(command):
@@ -17,9 +20,9 @@ def get_last_snapshot(dataset):
     return result
 
 
-def create_vm_clones(vm, os, games):
-    os_dataset = "data/kvm/desktop/desktop-vm{}".format(vm)
-    games_dataset = "data/kvm/desktop/games-vm{}".format(vm)
+def create_vm_clones(vm, os, games, pool_os, pool_games):
+    os_dataset = "{}/kvm/desktop/desktop-vm{}".format(pool_os, vm)
+    games_dataset = "{}/kvm/desktop/games-vm{}".format(pool_games, vm)
     zfs_cmd = "zfs list -H -o name {}".format(os_dataset)
     check = exec_shell_command(zfs_cmd)[:-1]
     if "dataset does not exist" in check[0]:
@@ -53,15 +56,15 @@ def write_scst_config(config, path):
     file_scst_config.close()
 
 
-def add_device_config(config, name):
-    filename = "/dev/zvol/data/kvm/desktop/{}".format(name)
+def add_device_config(config, name, pool):
+    filename = "/dev/zvol/{}/kvm/desktop/{}".format(pool, name)
     if config.find(filename) <= 0:
         dev_config = "\tDEVICE {} {{\n" \
                     "\t\tfilename {}\n" \
                     "\t\tnv_cache 1\n" \
                     "\t\trotational 0\n" \
                     "\t\tt10_vend_id FREE_TT\n" \
-                    "\t}}\n".format(name, filename, bs)
+                    "\t}}\n".format(name, filename)
         # print(dev_config)
         pos1 = config.find("TARGET_DRIVER")
         pos2 = config.rfind("}", 0, pos1)-1
@@ -99,10 +102,10 @@ def add_target_config(config, device, host, portal_addr):
 def main(args):
     scst_config = read_scst_config(args.scst_config)
     snap_games = get_last_snapshot("data/reference")
-    snap_os = get_last_snapshot("data/kvm/desktop/{}".format(args.os))
-    create_vm_clones(args.vm, snap_os, snap_games)
-    scst_config = add_device_config(scst_config, "desktop-vm{}".format(args.vm))
-    scst_config = add_device_config(scst_config, "games-vm{}".format(args.vm))
+    snap_os = get_last_snapshot("data2/kvm/desktop/{}".format(args.os))
+    create_vm_clones(args.vm, snap_os, snap_games, POOL_OS, POOL_GAMES)
+    scst_config = add_device_config(scst_config, "desktop-vm{}".format(args.vm), POOL_OS)
+    scst_config = add_device_config(scst_config, "games-vm{}".format(args.vm), POOL_GAMES)
     scst_config = add_target_config(scst_config, "desktop-vm{}".format(args.vm), args.kvm_host, args.portal_addr)
     scst_config = add_target_config(scst_config, "games-vm{}".format(args.vm), args.kvm_host, args.portal_addr)
     write_scst_config(scst_config, args.scst_config)
@@ -110,10 +113,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PlayKey SDS VM disks config manager')
-    parser.add_argument('--vm', type=int, action='store', dest='vm', help='VM number')
-    parser.add_argument('--os', type=str, action='store', dest="os", help='Windows snapshot name')
-    parser.add_argument('--host', type=str, action='store', dest="kvm_host", help='KVM host name')
-    parser.add_argument('--portal', type=str, action='store', dest="portal_addr", help='iSCSI portal address')
+    parser.add_argument('--vm', type=int, action='store', dest='vm', help='VM number', required=True)
+    parser.add_argument('--os', type=str, action='store', dest="os", help='Windows snapshot name', required=True)
+    parser.add_argument('--host', type=str, action='store', dest="kvm_host", help='KVM host name', required=True)
+    parser.add_argument('--portal', type=str, action='store', dest="portal_addr", help='iSCSI portal address',
+                        required=True)
     parser.add_argument('--config', type=str, action='store', dest="scst_config", default="/etc/scst.conf",
                         help='SCST config path')
     args = parser.parse_args()

@@ -97,9 +97,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='PlayKey SDS Host disks config manager')
-    parser.add_argument('--os', type=str, action='store', dest="os", help='Linux snapshot name')
-    parser.add_argument('--host', type=str, action='store', dest="kvm_host", help='KVM host name')
-    parser.add_argument('--portal', type=str, action='store', dest="portal_addr", help='iSCSI portal address')
+    parser.add_argument('--os', type=str, action='store', dest="os", help='Linux snapshot name', required=True)
+    parser.add_argument('--host', type=str, action='store', dest="kvm_host", help='KVM host name', required=True)
+    parser.add_argument('--portal', type=str, action='store', dest="portal_addr", help='iSCSI portal address',
+                        required=True)
     parser.add_argument('--config', type=str, action='store', dest="scst_config", default="/etc/scst.conf",
                         help='SCST config path')
     args = parser.parse_args()

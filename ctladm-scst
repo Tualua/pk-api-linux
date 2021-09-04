@@ -132,7 +132,8 @@ def scst_get_luns():
             rel_id_value = rel_id_file.read().split("\n")[0]
             rel_id_file.close()
             result[lun0_filename] = rel_id_value
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            logging.error('Error getting LUN info %s Error: %s', lun0_path, e)
             pass
     return result
 
@@ -151,6 +152,16 @@ def scst_get_lun_wwn(lun):
         return wwns[lun]
     except KeyError:
         return None
+
+
+def scst_get_dev_wwn(dev):
+    path_export = "{}/{}/exported/export0".format(SYSFS_SCST_DEVICES, dev)
+    try:
+        wwn = os.readlink(path_export).split("/")[5]
+    except OSError:
+        wwn = None
+    finally:
+        return wwn
 
 
 def scst_get_lun_device(lun):
@@ -182,21 +193,27 @@ def scst_delete_device(device):
 
 
 def scst_add_device(filename):
-    mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
-    device_name = filename[filename.rfind("/")+1:]
-    command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
-    try:
-        mgmt_file.write(command)
-    except OSError as e:
-        print("OS error: {}".format(e))
-        logging.error("OS error: %s", e)
-    finally:
-        mgmt_file.close()
+    if check_zvol(filename):
+        logging.info("ZVol %s is OK", filename)
+        mgmt_file = open(SYSFS_SCST_DEV_MGMT, "w")
+        device_name = filename[filename.rfind("/")+1:]
+        command = "add_device {} filename={}; nv_cache=1; rotational=0".format(device_name, filename)
+        try:
+            mgmt_file.write(command)
+        except OSError as e:
+            print("OS error: {}".format(e))
+            logging.error("OS error: %s", e)
+        finally:
+            mgmt_file.close()
 
-    device_params = {
-        "t10_vend_id": "FREE_TT"
-    }
-    scst_set_device_params(device_name, device_params)
+        device_params = {
+            "t10_vend_id": "FREE_TT"
+        }
+        scst_set_device_params(device_name, device_params)
+        return True
+    else:
+        logging.error("ZVol %s does not exists!", filename)
+        return False
 
 
 def exec_shell_command(command):
@@ -215,7 +232,7 @@ def get_devlist(xml_output=False):
         dev_params = scst_get_device_params(dev)
         if dev_params['filename']:
             if dev_params['filename'] in luns.keys():
-                wwn = scst_get_lun_wwn(luns[dev_params['filename']])
+                wwn = scst_get_dev_wwn(dev)
                 devlist.append(list(map(lambda x: str(x), [
                     luns[dev_params['filename']],
                     'block',
@@ -290,7 +307,7 @@ def get_portlist(port=-1, verbose=False, xml_output=False):
         luns = scst_get_luns()
         for k, v in luns.items():
             portlist[v] = {
-                'Target': scst_get_lun_wwn(v),
+                'Target': scst_get_dev_wwn(k.split("/")[-1]),
                 'LUN 0': v
             }
         try:
@@ -307,7 +324,7 @@ def get_portlist(port=-1, verbose=False, xml_output=False):
             dev_params = scst_get_device_params(dev)
             if dev_params['filename']:
                 if dev_params['filename'] in luns.keys():
-                    wwn = scst_get_lun_wwn(luns[dev_params['filename']])
+                    wwn = scst_get_dev_wwn(dev)
                     portlist.append(list(map(lambda x: str(x), [
                         luns[dev_params['filename']],
                         "YES" if dev_params['active'] == '1' else "NO",
@@ -370,17 +387,20 @@ def create_lun(options, deviceid, lun):
     opt_wwn = options[2].split('=')[1].split(',')[0]
     logging.debug(
         "Command: create File: %s WWN: %s Device ID: %s", opt_file, opt_wwn, deviceid)
-    scst_add_device(opt_file)
-    mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
-                             SYSFS_SCST_LUNS_MGMT)
-    command = "add {} 0".format(deviceid)
-    mgmt_file = open(mgmt_path, "w")
-    try:
-        mgmt_file.write(command)
-    except Exception as e:
-        logging.error("Cannot write to %s Error: ", e)
-    finally:
-        mgmt_file.close()
+    if scst_add_device(opt_file):
+        mgmt_path = os.path.join(SYSFS_SCST_ISCSI_TGTS, opt_wwn,
+                                SYSFS_SCST_LUNS_MGMT)
+        command = "add {} 0".format(deviceid)
+        mgmt_file = open(mgmt_path, "w")
+        try:
+            mgmt_file.write(command)
+        except Exception as e:
+            logging.error("Cannot write to %s Error: ", e)
+        finally:
+            mgmt_file.close()
+    else:
+        logging.error("Cannot create LUN %s", deviceid)
+        sys.exit(1)
 
 
 def remove_lun(lun):
@@ -398,6 +418,11 @@ def print_result(result):
                 print(res)
             else:
                 print('\t'.join(res))
+
+
+def check_zvol(zvol):
+    z = Path(zvol)
+    return z.exists()
 
 
 def main(args):
