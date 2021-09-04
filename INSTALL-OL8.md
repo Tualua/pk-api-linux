@@ -132,7 +132,11 @@
 
 ##### ctladm
 
+<<<<<<< HEAD:INSTALL-OL8.md
     cp ~/pk-api-linux/ctladm /usr/bin/ctladm
+=======
+    cp ~/pk-api-linux/ctladm-scst /usr/bin/
+>>>>>>> ab331337c4bcec4c006d1c744c2bc1bf4a8aafea:INSTALL-OL8.3.md
     chmod +x /usr/bin/ctladm
     mkdir /etc/ctladm
         
